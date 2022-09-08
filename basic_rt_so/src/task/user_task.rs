@@ -10,7 +10,7 @@ use super::{task_queue::TaskQueue, task_waker::TaskWaker};
 
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Ord, PartialOrd)]
-pub struct TaskId(usize);
+pub struct TaskId(pub usize);
 
 impl TaskId {
     pub(crate) fn generate() -> TaskId {

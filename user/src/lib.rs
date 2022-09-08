@@ -260,7 +260,7 @@ pub fn check_callback(tid: usize) -> bool {
 use syscall6::{async_sys_read, async_sys_write};
 pub use syscall6::{ASYNC_SYSCALL_READ, ASYNC_SYSCALL_WRITE};
 pub fn async_read(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, key: usize) -> isize {
-    async_sys_write(fd, buffer_ptr, buffer_len, tid, pid, key)
+    async_sys_read(fd, buffer_ptr, buffer_len, tid, pid, key)
 }
 
 pub fn async_write(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, key: usize) -> isize {

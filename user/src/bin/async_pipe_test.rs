@@ -46,26 +46,26 @@ pub fn main() -> i32 {
 
 // 服务端接收用户端的请求，从管道中读取内容，然后向客户端写响应内容
 async fn server(fd1: usize, fd2: usize, tid: usize, pid: usize, _key1: usize, key2: usize) {
-    // println!("server read start---");
+    println!("server read start---");
     let mut buffer = [0u8; BUFFER_SIZE];
     read(fd1, &mut buffer);
-    // println!("server read end");
+    println!("server read end");
 
-    // println!("server write start---");
+    println!("server write start---");
     let resp = REQUEST;
     async_write(fd2, resp.as_bytes().as_ptr() as usize, resp.len(), tid, pid, key2);
-    // println!("server write end");
+    println!("server write end");
 }
 
 // 客户端发送请求，向管道中写请求内容，然后读取管道中服务器发送的响应内容
 async fn client(fd1: usize, fd2: usize, tid: usize, pid: usize, key1: usize, key2: usize) {
     // 向一个管道中写入数据cd
-    // println!("client write start---");
+    println!("client write start---");
     let req = REQUEST;
     async_write(fd1, req.as_bytes().as_ptr() as usize, req.len(), tid, pid, key1);
-    // println!("client write end");
+    println!("client write end");
     // 从另一个管道中异步的读数据
-    // println!("client read start---");
+    println!("client read start---");
     let buffer = [0u8; BUFFER_SIZE];
     let ac_r = AsyncCall::new(ASYNC_SYSCALL_READ, fd2, buffer.as_ptr() as usize, buffer.len(), tid, pid, key2);
     ac_r.await;

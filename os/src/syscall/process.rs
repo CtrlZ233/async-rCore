@@ -8,6 +8,7 @@ use crate::timer::get_time_ms;
 use alloc::string::String;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
+use crate::trap::{enable_timer_interrupt, disable_timer_interrupt};
 
 pub fn sys_exit(exit_code: i32) -> ! {
     exit_current_and_run_next(exit_code);
@@ -21,6 +22,17 @@ pub fn sys_yield() -> isize {
 
 pub fn sys_get_time() -> isize {
     get_time_ms() as isize
+}
+
+pub fn sys_set_timer_interrupt(enable: usize) -> isize {
+    match enable {
+        0 => disable_timer_interrupt(),
+        1 => enable_timer_interrupt(),
+        _ => {
+            return -1;
+        }
+    }
+    0
 }
 
 pub fn sys_getpid() -> isize {

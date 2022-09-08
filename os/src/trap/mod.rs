@@ -38,6 +38,12 @@ pub fn enable_timer_interrupt() {
     }
 }
 
+pub fn disable_timer_interrupt() {
+    unsafe {
+        sie::clear_stimer();
+    }
+}
+
 #[no_mangle]
 pub fn trap_handler() -> ! {
     set_kernel_trap_entry();

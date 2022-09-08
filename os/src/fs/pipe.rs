@@ -171,6 +171,7 @@ impl File for Pipe {
             assert_eq!(s.readable(), true);
             let mut buf_iter = _buf.into_iter();
             // let mut read_size = 0usize;
+            // println!("test3");
             let mut helper = Box::new(ReadHelper::new());
             loop {
                 let mut ring_buffer = s.buffer.lock();
@@ -200,6 +201,7 @@ impl File for Pipe {
                     }
                 }
             }
+            // println!("test4");
             // 将读协程加入到回调队列中，使得用户态的协程执行器能够唤醒读协程
             crate::lkm::add_callback(pid, tid);
         }

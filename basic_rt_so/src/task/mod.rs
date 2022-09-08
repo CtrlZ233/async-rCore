@@ -10,6 +10,8 @@ use manager::{MANAGER, Manager};
 use crate::config::{MAX_USER, PRIO_NUM};
 use alloc::{vec::Vec, collections::BTreeSet};
 
+use crate::syscall::{enable_timer_interrupt, disable_timer_interrupt, uyield};
+
 use alloc::sync::Arc;
 use alloc::boxed::Box;
 use core::{future::Future, pin::Pin, task::Poll};
@@ -23,34 +25,47 @@ pub use ccmap::{wake_kernel_tid, wrmap_register};
 
 #[no_mangle]
 pub fn user_thread_main(pid: usize) {
-    // uprintln!(" > > > > > > > pid_{} thread_main < < < < < < < ", pid);
+    uprintln!(" > > > > > > > pid_{} thread_main < < < < < < < ", pid);
+    let mut wait_task = BTreeSet::<usize>::new();
     loop {
         let task;
         let tid;
         {
-            let mut ex = MANAGER[pid].lock();
-            task = ex.fetch();
-            if task.is_none() { break; }
+            disable_timer_interrupt();
+            task = MANAGER[pid].lock().fetch();
+            enable_timer_interrupt();
+            if task.is_none() {
+                if wait_task.is_empty() {
+                    break;
+                }
+                uyield();
+                // uprintln!("test");
+                continue;
+            }
             tid = task.clone().unwrap().tid;
         }
         // uprintln!("user current task is {}", task.clone().unwrap().tid.get_val());
         match task.clone().unwrap().execute() {
             Poll::Ready(_) => {
+                uprintln!("remove tid: {}", tid.0);
+                wait_task.remove(&tid.0);
                 // MANAGER[pid].lock().tasks.remove(&tid);
             },
             Poll::Pending => {
+                uprintln!("insert tid: {}", tid.0);
+                wait_task.insert(tid.0);
                 // MANAGER[pid].lock().add(task.unwrap());
             },
         }
     }
-    // crate::uprintln!("user coroutine end!!!!!!!");
+    crate::uprintln!("user coroutine end!!!!!!!");
 }
 
 
 pub static mut CUR_COROUTINE: usize = 0;
 #[no_mangle]
 pub fn kernel_thread_main() {
-    // kprintln!(" > > > > > > > [kernel] thread_main < < < < < < < ");
+    kprintln!(" > > > > > > > [kernel] thread_main < < < < < < < ");
 
     loop {
         let task;
@@ -74,16 +89,18 @@ pub fn kernel_thread_main() {
             },
         }
     }
-    // kprintln!("kernel coroutine end!!!!!!!");
+    kprintln!("kernel coroutine end!!!!!!!");
 }
 
 
 #[no_mangle]
 #[inline(never)]
 pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize){
+    disable_timer_interrupt();
     let task_queue = MANAGER[pid].lock().task_queue.clone();
     let task = Arc::new(UserTask::new(Mutex::new(future), prio, task_queue));
     MANAGER[pid].lock().add(task);
+    enable_timer_interrupt();
 }
 
 /*********** 内核使用接口 ***************/
@@ -110,6 +127,7 @@ pub fn update_global_bitmap() {
         u_maps.push(bitmap_val);
         ans = ans | bitmap_val;
     }
+
     let mask = get_right_one_mask(ans);
     PRIO_PIDS.lock().clear();
     for i in 0..MAX_USER {
@@ -141,7 +159,7 @@ pub fn kernel_current_corotine() -> usize {
 #[no_mangle]
 pub fn add_callback(pid: usize, tid: usize) {
     let mut ex = MANAGER[pid].lock();
-    // kprintln!("process {} add_callback {}", pid, tid);
+    kprintln!("process {} add_callback {}", pid, tid);
     ex.add_callback(TaskId::get_tid_by_usize(tid));
 }
 

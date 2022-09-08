@@ -39,7 +39,7 @@ impl Manager {
     pub fn fetch(&mut self) -> Option<Arc<UserTask>> {
         let callback_queue = self.callback_queue.clone();
         while callback_queue.lock().len() != 0 {
-            uprintln!("need wake");
+            // uprintln!("need wake");
             if let Some(id) = callback_queue.lock().pop_front() {
                 CBTID.lock().add(id.get_val());
                 self.tasks.get(&id).unwrap().waker.wake_by_ref();
