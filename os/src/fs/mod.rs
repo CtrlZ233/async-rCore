@@ -13,7 +13,8 @@ pub trait File: Send + Sync {
     fn read(&self, buf: UserBuffer) -> usize;
     fn write(&self, buf: UserBuffer) -> usize;
 
-    fn aread(&self, buf: UserBuffer, tid: usize, pid: usize, key: usize) -> Pin<Box<dyn Future<Output = ()> + 'static + Send + Sync>>;
+    fn aread(&self, buf: UserBuffer, tid: usize, pid: usize, thread_id: usize, key: usize)
+        -> Pin<Box<dyn Future<Output = ()> + 'static + Send + Sync>>;
 
 }
 

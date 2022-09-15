@@ -21,12 +21,12 @@ fn syscall6(id: usize, args: [usize; 6]) -> isize {
 
 
 
-pub fn async_sys_read(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, key: usize) -> isize {
-    syscall6(ASYNC_SYSCALL_READ, [fd, buffer_ptr, buffer_len, tid, pid, key])
+pub fn async_sys_read(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, thread_id: usize) -> isize {
+    syscall6(ASYNC_SYSCALL_READ, [fd, buffer_ptr, buffer_len, tid, pid, thread_id])
 }
 
-pub fn async_sys_write(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, key: usize) -> isize {
-    syscall6(ASYNC_SYSCALL_WRITE, [fd, buffer_ptr, buffer_len, tid, pid, key])
+pub fn async_sys_write(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, read_fd: usize) -> isize {
+    syscall6(ASYNC_SYSCALL_WRITE, [fd, buffer_ptr, buffer_len, tid, pid, read_fd])
 }
 
 

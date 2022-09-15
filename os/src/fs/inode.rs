@@ -145,7 +145,8 @@ impl File for OSInode {
         total_write_size
     }
 
-    fn aread(&self, buf: UserBuffer, _tid: usize, _pid: usize, _key: usize) -> Pin<Box<dyn Future<Output = ()> + 'static + Send + Sync>> {
+    fn aread(&self, buf: UserBuffer, _tid: usize, _pid: usize, _thread_id: usize, _key: usize)
+        -> Pin<Box<dyn Future<Output = ()> + 'static + Send + Sync>> {
         async fn work(osi: Arc<Mutex<OSInodeInner>>, mut _buf: UserBuffer) {
             let mut inner = osi.lock();
             // let mut total_read_size = 0usize;

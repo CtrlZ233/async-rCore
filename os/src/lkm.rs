@@ -46,7 +46,7 @@ fn add_lkm_image(){
 }
 
 
-pub const SYMBOL_ADDR: *const usize = 0x87018000usize as *const usize;
+pub const SYMBOL_ADDR: *const usize = 0x8701a000usize as *const usize;
 
 pub fn alloc_task_id() -> usize {
     unsafe {
@@ -55,12 +55,13 @@ pub fn alloc_task_id() -> usize {
     }
 }
 
-pub fn add_task_with_prority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize) {
+pub fn add_task_with_prority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
+                             pid: usize, thread_id: usize, tid: usize) {
     // log::warn!("kernel add task");
     unsafe {
-        let add_task_with_prority: fn(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize) =
-            transmute(*SYMBOL_ADDR as usize);
-        add_task_with_prority(future, prio, pid, tid);
+        let add_task_with_prority: fn(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
+                                      pid: usize, thread_id: usize, tid: usize) = transmute(*SYMBOL_ADDR as usize);
+        add_task_with_prority(future, prio, pid, thread_id, tid);
     }
 } 
 
@@ -78,10 +79,10 @@ pub fn update_global_bitmap() {
     }
 }
 
-pub fn check_prio_pid(pid: usize) -> bool{
+pub fn check_prio_pid(pid: usize, thread_id: usize) -> bool{
     unsafe {
-        let check_prio_pid: fn(usize) -> bool = transmute(*(SYMBOL_ADDR.add(4)) as usize);
-        check_prio_pid(pid)
+        let check_prio_pid: fn(usize, usize) -> bool = transmute(*(SYMBOL_ADDR.add(4)) as usize);
+        check_prio_pid(pid, thread_id)
     }
 }
 
@@ -111,10 +112,10 @@ pub fn kernel_current_corotine() -> usize {
     }
 }
 
-pub fn add_callback(pid: usize, tid: usize) {
+pub fn add_callback(pid: usize, thread_id: usize, tid: usize) {
     unsafe {
-        let add_callback: fn(usize, usize) = transmute(*(SYMBOL_ADDR.add(8)) as usize);
-        add_callback(pid, tid)
+        let add_callback: fn(usize, usize, usize) = transmute(*(SYMBOL_ADDR.add(8)) as usize);
+        add_callback(pid, thread_id, tid)
     }
 }
 

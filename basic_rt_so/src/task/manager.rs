@@ -11,13 +11,14 @@ use super::{
     bitmap::BitMap,
     task_queue::TaskQueue,
 };
-use crate::config::{MAX_USER, PRIO_NUM, CAP};
+use crate::config::{MAX_USER, MAX_THREAD, PRIO_NUM, CAP};
 
 lazy_static!{
-    pub static ref MANAGER: Vec<Arc<Mutex<Box<Manager>>>> = 
-        (0..MAX_USER).map(|_| 
+    pub static ref MANAGER: Vec<Vec<Arc<Mutex<Box<Manager>>>>> = (0..MAX_USER).map(|_|
+        (0..MAX_THREAD).map(|_|
             Arc::new(Mutex::new(Box::new(Manager::new())))
-        ).collect::<Vec<Arc<Mutex<Box<Manager>>>>>();
+        ).collect::<Vec<Arc<Mutex<Box<Manager>>>>>()
+    ).collect::<Vec<Vec<Arc<Mutex<Box<Manager>>>>>>();
 }
 
 pub struct Manager {

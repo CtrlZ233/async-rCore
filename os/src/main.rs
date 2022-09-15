@@ -84,9 +84,8 @@ pub fn rust_main() -> ! {
 
     task::add_user_test();
 
-
     task::run_tasks();
-    
+    log::debug!("here4");
     panic!("Unreachable in rust_main!");
 }
 

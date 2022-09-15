@@ -27,7 +27,12 @@ impl TaskManager {
         loop {
             peek = self.ready_queue.pop_front().unwrap();
             let pid = peek.process.upgrade().unwrap().getpid();
-            if crate::lkm::check_prio_pid(pid) {
+            let thread_id = peek.inner_exclusive_access()
+                .res
+                .as_ref()
+                .unwrap()
+                .tid;
+            if crate::lkm::check_prio_pid(pid, thread_id) {
                 // pid 为 0，且 PRIO_PIDS 中存在，表示内核有协程需要执行，返回到 run_task 的 loop 循环的 else 分支来执行
                 if pid == 0 {
                     self.ready_queue.push_back(peek);

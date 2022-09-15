@@ -229,7 +229,7 @@ use alloc::boxed::Box;
 use core::pin::Pin;
 use core::future::Future;
 use core::task::{Context, Poll};
-pub const SYMBOL_ADDR: *const usize = 0x87018000usize as *const usize;
+pub const SYMBOL_ADDR: *const usize = 0x8701a000usize as *const usize;
 
 pub fn alloc_task_id() -> usize {
     unsafe {
@@ -238,18 +238,19 @@ pub fn alloc_task_id() -> usize {
     }
 }
 
-pub fn add_task_with_prority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize) {
+pub fn add_task_with_prority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
+                             pid: usize, thread_id: usize, tid: usize) {
     unsafe {
-        let add_task_with_prority: fn(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize) =
-            transmute(*SYMBOL_ADDR as usize);
-        add_task_with_prority(future, prio, pid, tid);
+        let add_task_with_prority: fn(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
+                                      pid: usize, thread_id: usize, tid: usize) = transmute(*SYMBOL_ADDR as usize);
+        add_task_with_prority(future, prio, pid, thread_id, tid);
     }
 } 
 
-pub fn user_thread_main(pid: usize) {
+pub fn user_thread_main(pid: usize, thread_id: usize) {
     unsafe {
-        let user_thread_main: fn(pid: usize) = transmute(*(SYMBOL_ADDR.add(2)) as usize);
-        user_thread_main(pid);
+        let user_thread_main: fn(pid: usize, thread_id: usize) = transmute(*(SYMBOL_ADDR.add(2)) as usize);
+        user_thread_main(pid, thread_id);
     }
 }
 
@@ -266,12 +267,12 @@ pub fn check_callback(tid: usize) -> bool {
 
 use syscall6::{async_sys_read, async_sys_write};
 pub use syscall6::{ASYNC_SYSCALL_READ, ASYNC_SYSCALL_WRITE};
-pub fn async_read(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, key: usize) -> isize {
-    async_sys_read(fd, buffer_ptr, buffer_len, tid, pid, key)
+pub fn async_read(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, thread_id: usize) -> isize {
+    async_sys_read(fd, buffer_ptr, buffer_len, tid, pid, thread_id)
 }
 
-pub fn async_write(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, key: usize) -> isize {
-    async_sys_write(fd, buffer_ptr, buffer_len, tid, pid, key)
+pub fn async_write(fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, read_fd: usize) -> isize {
+    async_sys_write(fd, buffer_ptr, buffer_len, tid, pid, read_fd)
 }
 
 // 异步系统调用
@@ -282,14 +283,15 @@ pub struct AsyncCall {
     buffer_len: usize,  // 缓冲区长度
     tid: usize,         // 执行异步系统调用的协程 id
     pid: usize,         // 进程 id
-    key: usize,         // 类似于钥匙，读写的协程所拥有的钥匙必须要相同，这样才能够建立正确的对应关系，体现了协作
+    thread_id: usize,   // 线程id
     cnt: usize,         
 }
 
 impl AsyncCall {
-    pub fn new( call_type: usize, fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize, pid: usize, key: usize) -> Self {
+    pub fn new( call_type: usize, fd: usize, buffer_ptr: usize, buffer_len: usize, tid: usize,
+                pid: usize, thread_id: usize) -> Self {
         Self { 
-            call_type, fd, buffer_ptr, buffer_len, tid, pid, key, cnt: 0
+            call_type, fd, buffer_ptr, buffer_len, tid, pid, thread_id, cnt: 0
         }
     }
 }
@@ -301,8 +303,8 @@ impl Future for AsyncCall {
         // submit async task to kernel and return immediately
         if self.cnt == 0 {
             match self.call_type {
-                ASYNC_SYSCALL_READ => async_sys_read(self.fd, self.buffer_ptr, self.buffer_len, self.tid, self.pid, self.key),
-                ASYNC_SYSCALL_WRITE => async_sys_write(self.fd, self.buffer_ptr, self.buffer_len, self.tid, self.pid, self.key),
+                ASYNC_SYSCALL_READ => async_sys_read(self.fd, self.buffer_ptr, self.buffer_len, self.tid, self.pid, self.thread_id),
+                ASYNC_SYSCALL_WRITE => async_sys_write(self.fd, self.buffer_ptr, self.buffer_len, self.tid, self.pid, self.thread_id),
                 _ => {0},
             };
             self.cnt += 1;

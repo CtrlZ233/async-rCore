@@ -166,8 +166,9 @@ impl File for Pipe {
     }
 
     // write_tid 表示写的协程，CUR_COROTINE 表示当前的协程，也就是读协程
-    fn aread(&self, buf: UserBuffer, tid: usize, pid: usize, key: usize) -> Pin<Box<dyn Future<Output = ()>  + 'static + Send + Sync>> {
-        async fn aread_work(s: Pipe, _buf: UserBuffer, tid: usize, pid: usize, key: usize) {
+    fn aread(&self, buf: UserBuffer, tid: usize, pid: usize, thread_id: usize, fd: usize)
+        -> Pin<Box<dyn Future<Output = ()>  + 'static + Send + Sync>> {
+        async fn aread_work(s: Pipe, _buf: UserBuffer, tid: usize, pid: usize, thread_id: usize, fd: usize) {
             assert_eq!(s.readable(), true);
             let mut buf_iter = _buf.into_iter();
             // let mut read_size = 0usize;
@@ -184,7 +185,8 @@ impl File for Pipe {
                     }
                     drop(ring_buffer);
                     //suspend_current_and_run_next();
-                    crate::lkm::wrmap_register(key, crate::lkm::kernel_current_corotine());
+                    crate::lkm::wrmap_register(fd, crate::lkm::kernel_current_corotine());
+                    // println!("reg fd: {}", fd);
                     // unsafe { WRMAP.lock().register(write_tid, CUR_COROUTINE); }
                     helper.as_mut().await;
                     continue;
@@ -203,10 +205,10 @@ impl File for Pipe {
             }
             // println!("test4");
             // 将读协程加入到回调队列中，使得用户态的协程执行器能够唤醒读协程
-            crate::lkm::add_callback(pid, tid);
+            crate::lkm::add_callback(pid, thread_id, tid);
         }
         // log::warn!("pipe aread");
-        Box::pin(aread_work(self.clone(), buf, tid, pid, key))
+        Box::pin(aread_work(self.clone(), buf, tid, pid, thread_id, fd))
 
     }
 }

@@ -7,7 +7,7 @@ mod ccmap;
 
 pub use user_task::{UserTask, TaskId, alloc_task_id};
 use manager::{MANAGER, Manager};
-use crate::config::{MAX_USER, PRIO_NUM};
+use crate::config::{MAX_USER, MAX_THREAD, PRIO_NUM};
 use alloc::{vec::Vec, collections::BTreeSet};
 
 use crate::syscall::{enable_timer_interrupt, disable_timer_interrupt, uyield};
@@ -24,15 +24,15 @@ pub use ccmap::{wake_kernel_tid, wrmap_register};
 
 
 #[no_mangle]
-pub fn user_thread_main(pid: usize) {
-    uprintln!(" > > > > > > > pid_{} thread_main < < < < < < < ", pid);
+pub fn user_thread_main(pid: usize, thread_id: usize) {
+    uprintln!(" > > > > > > > pid_{} thread_id: {} thread_main < < < < < < < ", pid, thread_id);
     let mut wait_task = BTreeSet::<usize>::new();
     loop {
         let task;
         let tid;
         {
             disable_timer_interrupt();
-            task = MANAGER[pid].lock().fetch();
+            task = MANAGER[pid][thread_id].lock().fetch();
             enable_timer_interrupt();
             if task.is_none() {
                 if wait_task.is_empty() {
@@ -58,7 +58,7 @@ pub fn user_thread_main(pid: usize) {
             },
         }
     }
-    crate::uprintln!("user coroutine end!!!!!!!");
+    crate::uprintln!("pid_{} thread_id: {} thread_main coroutine end!!!!!!!", pid, thread_id);
 }
 
 
@@ -71,7 +71,7 @@ pub fn kernel_thread_main() {
         let task;
         let tid;
         {
-            let mut ex = MANAGER[0].lock();
+            let mut ex = MANAGER[0][0].lock();
             task = ex.fetch();
             if task.is_none() { break; }
             tid = task.clone().unwrap().tid;
@@ -95,11 +95,12 @@ pub fn kernel_thread_main() {
 
 #[no_mangle]
 #[inline(never)]
-pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize){
+pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
+                              pid: usize, thread_id: usize, tid: usize){
     disable_timer_interrupt();
-    let task_queue = MANAGER[pid].lock().task_queue.clone();
+    let task_queue = MANAGER[pid][thread_id].lock().task_queue.clone();
     let task = Arc::new(UserTask::new(Mutex::new(future), prio, task_queue, tid));
-    MANAGER[pid].lock().add(task);
+    MANAGER[pid][thread_id].lock().add(task);
     enable_timer_interrupt();
 }
 
@@ -115,7 +116,7 @@ pub fn get_right_one_mask(num: usize) -> usize {
 }
 
 lazy_static! {
-    pub static ref PRIO_PIDS: Arc<Mutex<BTreeSet<usize>>> = Arc::new(Mutex::new(BTreeSet::new()));
+    pub static ref PRIO_PIDS: Arc<Mutex<BTreeSet<(usize, usize)>>> = Arc::new(Mutex::new(BTreeSet::new()));
 }
 
 #[no_mangle]
@@ -123,27 +124,31 @@ pub fn update_global_bitmap() {
     let mut ans = 0;
     let mut u_maps:Vec<usize> = Vec::new();
     for i in 0..MAX_USER {
-        let bitmap_val = MANAGER[i].lock().task_queue.lock().bitmap.get_val();
-        u_maps.push(bitmap_val);
-        ans = ans | bitmap_val;
+        for j in 0..MAX_THREAD {
+            let bitmap_val = MANAGER[i][j].lock().task_queue.lock().bitmap.get_val();
+            u_maps.push(bitmap_val);
+            ans = ans | bitmap_val;
+        }
     }
 
     let mask = get_right_one_mask(ans);
     PRIO_PIDS.lock().clear();
     for i in 0..MAX_USER {
-        if (u_maps[i] & mask) != 0 { 
-            PRIO_PIDS.lock().insert(i); 
+        for j in 0..MAX_THREAD {
+            if (u_maps[i * MAX_USER + j] & mask) != 0 {
+                PRIO_PIDS.lock().insert((i, j));
+            }
         }
     }
 }
 
 #[no_mangle]
-pub fn check_prio_pid(pid: usize) -> bool {
+pub fn check_prio_pid(pid: usize, thread_id: usize) -> bool {
     if PRIO_PIDS.lock().len() == 0 {
         return false;
     }
-    if PRIO_PIDS.lock().contains(&pid) { 
-        PRIO_PIDS.lock().remove(&pid);
+    if PRIO_PIDS.lock().contains(&(pid, thread_id)) {
+        PRIO_PIDS.lock().remove(&(pid, thread_id));
         return true; 
     }
     false
@@ -157,8 +162,8 @@ pub fn kernel_current_corotine() -> usize {
 }
 
 #[no_mangle]
-pub fn add_callback(pid: usize, tid: usize) {
-    let mut ex = MANAGER[pid].lock();
+pub fn add_callback(pid: usize, thread_id: usize, tid: usize) {
+    let mut ex = MANAGER[pid][thread_id].lock();
     kprintln!("process {} add_callback {}", pid, tid);
     ex.add_callback(TaskId::get_tid_by_usize(tid));
 }
