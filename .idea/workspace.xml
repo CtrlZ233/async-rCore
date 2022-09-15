@@ -19,16 +19,15 @@
   <component name="ChangeListManager">
     <list default="true" id="65db11da-4d68-4f41-9d22-08c491f37b46" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/config.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/syscall.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/syscall.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/os/src/fs/pipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/fs/pipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/os/src/syscall/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/syscall/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/os/src/syscall/process.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/syscall/process.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/os/src/trap/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/trap/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/os/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/lkm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/lkm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/syscall/async_wr.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/syscall/async_wr.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/bin/async_pipe_demo.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/bin/async_pipe_demo.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/user/src/bin/async_pipe_test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/bin/async_pipe_test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/bin/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/bin/test.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/user/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -69,8 +68,9 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/ctrlz/workSpace/rCore_proj/async-rCore/rCore&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;
+    &quot;last_opened_file_path&quot;: &quot;/home/ctrlz/workSpace/rCore_proj/async-rCore/AsyncOS&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;
   }
 }</component>
   <component name="RustProjectSettings">
@@ -88,7 +88,12 @@
       <workItem from="1662458802491" duration="29208000" />
       <workItem from="1662599602467" duration="353000" />
       <workItem from="1662601743264" duration="683000" />
-      <workItem from="1662624129993" duration="14754000" />
+      <workItem from="1662624129993" duration="15055000" />
+      <workItem from="1662684667091" duration="1651000" />
+      <workItem from="1663137581506" duration="4075000" />
+      <workItem from="1663163051981" duration="335000" />
+      <workItem from="1663204549087" duration="75000" />
+      <workItem from="1663204635673" duration="366000" />
     </task>
     <servers />
   </component>

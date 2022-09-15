@@ -20,9 +20,10 @@ pub fn main() -> i32 {
     println!("pid is {}, user test>>>>>>>", pid);
     async_write(0, 0, 0, 0, 0, 0);
     async_read(0, 0, 0, 0, 0, 0);
-
-    add_task_with_prority(Box::pin(test1()), 0, pid);
-    add_task_with_prority(Box::pin(test2()), 1, pid);
+    let tid1 = alloc_task_id();
+    add_task_with_prority(Box::pin(test1()), 0, pid, tid1);
+    let tid2 = alloc_task_id();
+    add_task_with_prority(Box::pin(test2()), 1, pid, tid2);
     // 执行一段时间空操作使得用户进程的时间片用完，进入时钟中断
     for _i in 0..(1 << 25) {
         unsafe {

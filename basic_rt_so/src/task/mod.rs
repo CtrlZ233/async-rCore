@@ -5,7 +5,7 @@ mod task_queue;
 mod manager;
 mod ccmap;
 
-pub use user_task::{UserTask, TaskId};
+pub use user_task::{UserTask, TaskId, alloc_task_id};
 use manager::{MANAGER, Manager};
 use crate::config::{MAX_USER, PRIO_NUM};
 use alloc::{vec::Vec, collections::BTreeSet};
@@ -95,10 +95,10 @@ pub fn kernel_thread_main() {
 
 #[no_mangle]
 #[inline(never)]
-pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize){
+pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize){
     disable_timer_interrupt();
     let task_queue = MANAGER[pid].lock().task_queue.clone();
-    let task = Arc::new(UserTask::new(Mutex::new(future), prio, task_queue));
+    let task = Arc::new(UserTask::new(Mutex::new(future), prio, task_queue, tid));
     MANAGER[pid].lock().add(task);
     enable_timer_interrupt();
 }

@@ -16,8 +16,11 @@ pub fn main() -> i32 {
     let read_end = pipe_fd[0];
     let write_end = pipe_fd[1];
     // 先添加读的协程，再添加写的协程，两个协程的优先级相同
-    add_task_with_prority(Box::pin(server_read(read_end, 0, pid, 333)), 0, pid);
-    add_task_with_prority(Box::pin(client_write(write_end, 1, pid, 333)), 1, pid);
+    let mut tid = alloc_task_id();
+    add_task_with_prority(Box::pin(server_read(read_end, tid, pid, 333)), 0, pid, tid);
+
+    tid = alloc_task_id();
+    add_task_with_prority(Box::pin(client_write(write_end, tid, pid, 333)), 1, pid, tid);
 
     user_thread_main(pid);
     0

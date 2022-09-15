@@ -231,11 +231,18 @@ use core::future::Future;
 use core::task::{Context, Poll};
 pub const SYMBOL_ADDR: *const usize = 0x87018000usize as *const usize;
 
-pub fn add_task_with_prority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize) {
+pub fn alloc_task_id() -> usize {
     unsafe {
-        let add_task_with_prority: fn(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize) = 
+        let alloc_task_id: fn() -> usize = transmute(*(SYMBOL_ADDR.add(10)) as usize);
+        alloc_task_id()
+    }
+}
+
+pub fn add_task_with_prority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize) {
+    unsafe {
+        let add_task_with_prority: fn(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize, pid: usize, tid: usize) =
             transmute(*SYMBOL_ADDR as usize);
-        add_task_with_prority(future, prio, pid);
+        add_task_with_prority(future, prio, pid, tid);
     }
 } 
 

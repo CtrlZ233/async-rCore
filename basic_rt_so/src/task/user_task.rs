@@ -33,6 +33,9 @@ impl TaskId {
     } 
 }
 
+pub fn alloc_task_id() -> usize {
+    TaskId::generate().0
+}
 
 
 // Task包装协程
@@ -50,13 +53,13 @@ pub struct UserTask{
 
 impl UserTask{
     //创建一个协程
-    pub fn new(future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>, prio: usize, task_queue: Arc<Mutex<Box<TaskQueue>>>) -> Self{
-        let tid = TaskId::generate();
+    pub fn new(future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>, prio: usize, task_queue: Arc<Mutex<Box<TaskQueue>>>, tid: usize) -> Self{
+        let task_id = TaskId(tid);
         UserTask{
-            tid,
+            tid: task_id,
             future,
             prio,
-            waker: Arc::new(TaskWaker::new(tid, prio, task_queue)),
+            waker: Arc::new(TaskWaker::new(task_id, prio, task_queue)),
         }
     }
 

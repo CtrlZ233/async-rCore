@@ -31,6 +31,7 @@ use task::{TaskId,
     kernel_current_corotine,
     add_callback,
     check_callback,
+    alloc_task_id,
 };
 
 use core::task::*;
@@ -70,6 +71,7 @@ pub extern "C" fn _start() {
         INTERFACE[7] = kernel_current_corotine as usize;
         INTERFACE[8] = add_callback as usize;
         INTERFACE[9] = check_callback as usize;
+        INTERFACE[10] = alloc_task_id as usize;
         crate::kprintln!("[basic_rt] lib start-----------------------------");
         for addr in &INTERFACE {
             if *addr != 0 {

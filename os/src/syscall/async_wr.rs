@@ -1,4 +1,4 @@
-
+use crate::lkm::alloc_task_id;
 use super::fs::{sys_write, sys_close};
 use crate::task::{current_process, current_user_token};
 use crate::mm::{translated_byte_buffer, UserBuffer};
@@ -35,7 +35,8 @@ pub fn async_sys_read(fd: usize, buf: *const u8, len: usize, tid: usize, pid: us
         //    UserBuffer::new(translated_byte_buffer(token, buf, len))
         //) as isize
         let work = file.aread(UserBuffer::new(translated_byte_buffer(token, buf, len)), tid, pid, key);
-        crate::lkm::add_task_with_prority(work, 0, 0);
+        let kernel_tid = alloc_task_id();
+        crate::lkm::add_task_with_prority(work, 0, 0, kernel_tid);
         0
     } else {
         -1

@@ -30,12 +30,13 @@ pub fn main() -> i32 {
             let mut fd2 = [0usize; 2];
             pipe(&mut fd2);
             let writei = fd2[1];
-        
-            add_task_with_prority(Box::pin(server(readi, writei, i * MAX_LEN + j, pid, key, key + 1)), 1, pid);
+            let tid = alloc_task_id();
+            add_task_with_prority(Box::pin(server(readi, writei, tid, pid, key, key + 1)), 1, pid, tid);
             readi = fd2[0];
             key += 1;
         }
-        add_task_with_prority(Box::pin(client(first_write, readi, i * MAX_LEN + MAX_LEN - 1, pid, first_key, key)), 0, pid);
+        let tid = alloc_task_id();
+        add_task_with_prority(Box::pin(client(first_write, readi, tid, pid, first_key, key)), 0, pid, tid);
         key += 2;
     }
     user_thread_main(pid);
