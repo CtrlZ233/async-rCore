@@ -19,10 +19,14 @@
   <component name="ChangeListManager">
     <list default="true" id="65db11da-4d68-4f41-9d22-08c491f37b46" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/bitmap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/bitmap.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/lkm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/lkm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/trap/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/trap/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,7 +95,7 @@
       <workItem from="1663211785479" duration="3599000" />
       <workItem from="1663223640559" duration="7509000" />
       <workItem from="1663239273797" duration="1610000" />
-      <workItem from="1663404319887" duration="2662000" />
+      <workItem from="1663404319887" duration="12934000" />
     </task>
     <servers />
   </component>

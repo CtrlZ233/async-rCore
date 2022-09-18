@@ -229,7 +229,7 @@ use alloc::boxed::Box;
 use core::pin::Pin;
 use core::future::Future;
 use core::task::{Context, Poll};
-pub const SYMBOL_ADDR: *const usize = 0x8701a000usize as *const usize;
+pub const SYMBOL_ADDR: *const usize = 0x8701b000usize as *const usize;
 
 pub fn alloc_task_id() -> usize {
     unsafe {

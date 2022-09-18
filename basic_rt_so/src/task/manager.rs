@@ -21,16 +21,28 @@ lazy_static!{
     ).collect::<Vec<Vec<BitMap>>>();
 }
 
+pub struct CallbackTask {
+    pub pid: usize,
+    pub thread_id: usize,
+    pub tid: usize,
+    pub is_valid: bool,
+}
+
 lazy_static!{
-    pub static ref MANAGER: Vec<Vec<Arc<Mutex<Box<Manager>>>>> = (0..MAX_USER).map(|pid|
+    pub static ref CALLBACKS: Mutex<Vec<Arc<Mutex<CallbackTask>>>> = Mutex::new(Vec::new());
+}
+
+
+lazy_static!{
+    pub static ref MANAGER: Vec<Vec<Arc<Box<Manager>>>> = (0..MAX_USER).map(|pid|
         (0..MAX_THREAD).map(|thread_id|
-            Arc::new(Mutex::new(Box::new(Manager::new(pid, thread_id))))
-        ).collect::<Vec<Arc<Mutex<Box<Manager>>>>>()
-    ).collect::<Vec<Vec<Arc<Mutex<Box<Manager>>>>>>();
+            Arc::new(Box::new(Manager::new(pid, thread_id)))
+        ).collect::<Vec<Arc<Box<Manager>>>>()
+    ).collect::<Vec<Vec<Arc<Box<Manager>>>>>();
 }
 
 pub struct Manager {
-    pub tasks: BTreeMap<TaskId, Arc<UserTask>>,
+    pub tasks: Mutex<BTreeMap<TaskId, Arc<UserTask>>>,
     pub task_queue: Arc<Mutex<Box<TaskQueue>>>,
     pub callback_queue: Arc<Mutex<VecDeque<TaskId>>>,
 }
@@ -39,41 +51,51 @@ impl Manager {
     /// 新建 Manager
     pub fn new(pid: usize, thread_id: usize) -> Self {
         Manager {
-            tasks: BTreeMap::new(),
+            tasks: Mutex::new(BTreeMap::new()),
             task_queue: Arc::new(Mutex::new(Box::new(TaskQueue::new(pid, thread_id)))),
             callback_queue: Arc::new(Mutex::new(VecDeque::<TaskId>::new())),
         }
     }
-    /// 取出一个任务，首先会将回调队列中的所有任务唤醒，之后再取出优先级最高的任务
-    pub fn fetch(&mut self) -> Option<Arc<UserTask>> {
-        let callback_queue = self.callback_queue.clone();
-        while callback_queue.lock().len() != 0 {
-            // uprintln!("need wake");
-            if let Some(id) = callback_queue.lock().pop_front() {
-                CBTID.lock().add(id.get_val());
-                self.tasks.get(&id).unwrap().waker.wake_by_ref();
-            }
-        }
+
+    pub fn kernel_fetch(&self) -> Option<Arc<UserTask>> {
         let tid = self.task_queue.lock().pop_tid();
         if tid.is_none() { return None; }
-        if let Some(ret) = self.tasks.get(&tid.unwrap()) {
+        if let Some(ret) = self.tasks.lock().get(&tid.unwrap()) {
             return Some(ret.clone());
         } else {
             return None;
         }
     }
+
+    /// 取出一个任务，首先会将回调队列中的所有任务唤醒，之后再取出优先级最高的任务
+    pub fn user_fetch(&self) -> Option<Arc<UserTask>> {
+        let callback_queue = self.callback_queue.clone();
+        while callback_queue.lock().len() != 0 {
+            // uprintln!("need wake");
+            if let Some(id) = callback_queue.lock().pop_front() {
+                CBTID.lock().add(id.get_val());
+                self.tasks.lock().get(&id).unwrap().waker.wake_by_ref();
+            }
+        }
+        self.kernel_fetch()
+    }
     /// 添加任务
-    pub fn add(&mut self, task: Arc<UserTask>) {
+    pub fn add(&self, task: Arc<UserTask>) {
         let tid = task.tid;
         let prio = task.prio;
         self.task_queue.lock().add_tid(tid, prio);
-        self.tasks.insert(tid, task);
+        self.tasks.lock().insert(tid, task);
     }
     /// 判断 Manager 中是否有任务
     pub fn is_empty(&self) -> bool { self.task_queue.lock().is_empty() }
     /// 添加回调任务
-    pub fn add_callback(&mut self, tid: TaskId) {
-        self.callback_queue.lock().push_back(tid);
+    pub fn add_callback(&self, tid: TaskId) -> bool {
+        let mut op_queue = self.callback_queue.try_lock();
+        if let Some(mut queue) = op_queue {
+            queue.push_back(tid);
+            return true;
+        }
+        false
     }
 }
 

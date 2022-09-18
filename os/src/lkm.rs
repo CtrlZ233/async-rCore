@@ -46,7 +46,7 @@ fn add_lkm_image(){
 }
 
 
-pub const SYMBOL_ADDR: *const usize = 0x8701a000usize as *const usize;
+pub const SYMBOL_ADDR: *const usize = 0x8701b000usize as *const usize;
 
 pub fn alloc_task_id() -> usize {
     unsafe {
@@ -112,10 +112,17 @@ pub fn kernel_current_corotine() -> usize {
     }
 }
 
-pub fn add_callback(pid: usize, thread_id: usize, tid: usize) {
+pub fn add_callback(pid: usize, thread_id: usize, tid: usize) -> bool {
     unsafe {
-        let add_callback: fn(usize, usize, usize) = transmute(*(SYMBOL_ADDR.add(8)) as usize);
+        let add_callback: fn(usize, usize, usize) -> bool = transmute(*(SYMBOL_ADDR.add(8)) as usize);
         add_callback(pid, thread_id, tid)
+    }
+}
+
+pub fn update_callback() {
+    unsafe {
+        let update_callback: fn() = transmute(*(SYMBOL_ADDR.add(11)) as usize);
+        update_callback()
     }
 }
 

@@ -5,6 +5,7 @@ use core::pin::Pin;
 use core::sync::atomic::{AtomicUsize, Ordering};
 use core::task::{Waker, Poll, Context};
 use spin::Mutex;
+use crate::console::print;
 
 use super::{task_queue::TaskQueue, task_waker::TaskWaker};
 

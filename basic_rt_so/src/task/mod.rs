@@ -15,14 +15,14 @@ use crate::syscall::{enable_timer_interrupt, disable_timer_interrupt, uyield};
 use alloc::sync::Arc;
 use alloc::boxed::Box;
 use core::{future::Future, pin::Pin, task::Poll};
+use core::borrow::BorrowMut;
 
 use spin::Mutex;
 use lazy_static::*;
 
 pub use manager::check_callback;
 pub use ccmap::{wake_kernel_tid, wrmap_register};
-use crate::task::manager::BITMAPS;
-
+use crate::task::manager::{BITMAPS, CALLBACKS, CallbackTask};
 
 #[no_mangle]
 pub fn user_thread_main(pid: usize, thread_id: usize) {
@@ -32,15 +32,14 @@ pub fn user_thread_main(pid: usize, thread_id: usize) {
         let task;
         let tid;
         {
-            disable_timer_interrupt();
-            task = MANAGER[pid][thread_id].lock().fetch();
-            enable_timer_interrupt();
+            // disable_timer_interrupt();
+            task = MANAGER[pid][thread_id].user_fetch();
+            // enable_timer_interrupt();
             if task.is_none() {
                 if wait_task.is_empty() {
                     break;
                 }
                 uyield();
-                // uprintln!("test");
                 continue;
             }
             tid = task.clone().unwrap().tid;
@@ -72,15 +71,15 @@ pub fn kernel_thread_main() {
         let task;
         let tid;
         {
-            let mut ex = MANAGER[0][0].lock();
-            task = ex.fetch();
+            let mut ex = MANAGER[0][0].clone();
+            task = ex.kernel_fetch();
             if task.is_none() { break; }
             tid = task.clone().unwrap().tid;
         }
         unsafe {
             CUR_COROUTINE = tid.get_val();
             // crate::kprintln!("kernel cur_coroutine is {}", CUR_COROUTINE);                             
-        }  
+        }
         match task.clone().unwrap().execute() {
             Poll::Ready(_) => {
                 // MANAGER[0].lock().tasks.remove(&tid);
@@ -98,11 +97,11 @@ pub fn kernel_thread_main() {
 #[inline(never)]
 pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
                               pid: usize, thread_id: usize, tid: usize){
-    disable_timer_interrupt();
-    let task_queue = MANAGER[pid][thread_id].lock().task_queue.clone();
+    // disable_timer_interrupt();
+    let task_queue = MANAGER[pid][thread_id].task_queue.clone();
     let task = Arc::new(UserTask::new(Mutex::new(future), prio, task_queue, tid));
-    MANAGER[pid][thread_id].lock().add(task);
-    enable_timer_interrupt();
+    MANAGER[pid][thread_id].add(task);
+    // enable_timer_interrupt();
 }
 
 /*********** 内核使用接口 ***************/
@@ -132,7 +131,6 @@ pub fn update_global_bitmap() {
             ans = ans | bitmap_val;
         }
     }
-
     let mask = get_right_one_mask(ans);
     PRIO_PIDS.lock().clear();
     for i in 0..MAX_USER {
@@ -164,9 +162,37 @@ pub fn kernel_current_corotine() -> usize {
 }
 
 #[no_mangle]
-pub fn add_callback(pid: usize, thread_id: usize, tid: usize) {
-    let mut ex = MANAGER[pid][thread_id].lock();
+pub fn add_callback(pid: usize, thread_id: usize, tid: usize) -> bool {
+    let mut ex = MANAGER[pid][thread_id].clone();
     kprintln!("process {} add_callback {}", pid, tid);
-    ex.add_callback(TaskId::get_tid_by_usize(tid));
+    let res = ex.add_callback(TaskId::get_tid_by_usize(tid));
+    if !res {
+        CALLBACKS.lock().push(Arc::new(
+            Mutex::new(
+                CallbackTask {
+                    pid,
+                    thread_id,
+                    tid,
+                    is_valid: true,
+                }
+            )
+        ));
+        return false;
+    }
+    true
+}
+
+#[no_mangle]
+pub fn update_callback() {
+    let len = CALLBACKS.lock().len();
+    for index in 0..len {
+        let mut callback_task = CALLBACKS.lock().get(index).unwrap().clone();
+        let mut ex = MANAGER[callback_task.lock().pid][callback_task.lock().thread_id].clone();
+        let res = ex.add_callback(TaskId::get_tid_by_usize(callback_task.lock().tid));
+        if res {
+            callback_task.lock().is_valid = false;
+        }
+    }
+    CALLBACKS.lock().retain(|x| x.lock().is_valid == true);
 }
 

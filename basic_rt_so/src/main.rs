@@ -36,6 +36,7 @@ use task::{TaskId,
 
 use core::task::*;
 use alloc::boxed::Box;
+use crate::task::update_callback;
 // mod ccmap;
 // mod thread;
 
@@ -72,6 +73,7 @@ pub extern "C" fn _start() {
         INTERFACE[8] = add_callback as usize;
         INTERFACE[9] = check_callback as usize;
         INTERFACE[10] = alloc_task_id as usize;
+        INTERFACE[11] = update_callback as usize;
         crate::kprintln!("[basic_rt] lib start-----------------------------");
         for addr in &INTERFACE {
             if *addr != 0 {
