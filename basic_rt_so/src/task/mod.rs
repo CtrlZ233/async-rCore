@@ -21,6 +21,7 @@ use lazy_static::*;
 
 pub use manager::check_callback;
 pub use ccmap::{wake_kernel_tid, wrmap_register};
+use crate::task::manager::BITMAPS;
 
 
 #[no_mangle]
@@ -125,7 +126,8 @@ pub fn update_global_bitmap() {
     let mut u_maps:Vec<usize> = Vec::new();
     for i in 0..MAX_USER {
         for j in 0..MAX_THREAD {
-            let bitmap_val = MANAGER[i][j].lock().task_queue.lock().bitmap.get_val();
+            // let bitmap_val = MANAGER[i][j].lock().task_queue.lock().bitmap.get_val();
+            let bitmap_val = BITMAPS[i][j].get_val();
             u_maps.push(bitmap_val);
             ans = ans | bitmap_val;
         }

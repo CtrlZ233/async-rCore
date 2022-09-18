@@ -14,9 +14,17 @@ use super::{
 use crate::config::{MAX_USER, MAX_THREAD, PRIO_NUM, CAP};
 
 lazy_static!{
-    pub static ref MANAGER: Vec<Vec<Arc<Mutex<Box<Manager>>>>> = (0..MAX_USER).map(|_|
+    pub static ref BITMAPS: Vec<Vec<BitMap>> = (0..MAX_USER).map(|_|
         (0..MAX_THREAD).map(|_|
-            Arc::new(Mutex::new(Box::new(Manager::new())))
+            BitMap::new()
+        ).collect::<Vec<BitMap>>()
+    ).collect::<Vec<Vec<BitMap>>>();
+}
+
+lazy_static!{
+    pub static ref MANAGER: Vec<Vec<Arc<Mutex<Box<Manager>>>>> = (0..MAX_USER).map(|pid|
+        (0..MAX_THREAD).map(|thread_id|
+            Arc::new(Mutex::new(Box::new(Manager::new(pid, thread_id))))
         ).collect::<Vec<Arc<Mutex<Box<Manager>>>>>()
     ).collect::<Vec<Vec<Arc<Mutex<Box<Manager>>>>>>();
 }
@@ -29,10 +37,10 @@ pub struct Manager {
 
 impl Manager {
     /// 新建 Manager
-    pub fn new() -> Self {
+    pub fn new(pid: usize, thread_id: usize) -> Self {
         Manager {
             tasks: BTreeMap::new(),
-            task_queue: Arc::new(Mutex::new(Box::new(TaskQueue::new()))),
+            task_queue: Arc::new(Mutex::new(Box::new(TaskQueue::new(pid, thread_id)))),
             callback_queue: Arc::new(Mutex::new(VecDeque::<TaskId>::new())),
         }
     }
