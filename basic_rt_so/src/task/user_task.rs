@@ -6,36 +6,13 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 use core::task::{Waker, Poll, Context};
 use spin::Mutex;
 use crate::console::print;
+use crate::task::task_queue::{PrioScheduler, TaskId};
 
-use super::{task_queue::TaskQueue, task_waker::TaskWaker};
+use super::{task_waker::TaskWaker};
 
-
-#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Ord, PartialOrd)]
-pub struct TaskId(pub usize);
-
-impl TaskId {
-    pub(crate) fn generate() -> TaskId {
-        // 任务编号计数器，任务编号自增
-        static COUNTER: AtomicUsize = AtomicUsize::new(0);
-        let id = COUNTER.fetch_add(1, Ordering::Relaxed);
-        if id > usize::MAX / 2 {
-            // TODO: 不让系统 Panic
-            panic!("too many tasks!")
-        }
-        TaskId(id)
-    }
-
-    pub fn get_tid_by_usize(v: usize) -> Self {
-        Self(v)
-    }
-
-    pub fn get_val(&self) -> usize {
-        self.0
-    } 
-}
 
 pub fn alloc_task_id() -> usize {
-    TaskId::generate().0
+    TaskId::generate()
 }
 
 
@@ -44,9 +21,7 @@ pub struct UserTask{
     /// 任务编号
     pub tid: TaskId,
     /// future
-    pub future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>, 
-    /// 优先级
-    pub prio: usize,
+    pub future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>,
     /// waker
     pub waker: Arc<Waker>,
 
@@ -54,13 +29,12 @@ pub struct UserTask{
 
 impl UserTask{
     //创建一个协程
-    pub fn new(future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>, prio: usize, task_queue: Arc<Mutex<Box<TaskQueue>>>, tid: usize) -> Self{
-        let task_id = TaskId(tid);
+    pub fn new(future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>, prio: usize, scheduler: Arc<Mutex<Box<PrioScheduler>>>, tid: usize) -> Self{
+        let task_id = TaskId{tid, prio};
         UserTask{
             tid: task_id,
             future,
-            prio,
-            waker: Arc::new(TaskWaker::new(task_id, prio, task_queue)),
+            waker: Arc::new(TaskWaker::new(task_id, prio, scheduler)),
         }
     }
 

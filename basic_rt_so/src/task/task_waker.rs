@@ -1,31 +1,29 @@
 use alloc::sync::Arc;
 use spin::Mutex;
 use alloc::boxed::Box;
-use super::task_queue::TaskQueue;
 use core::task::Waker;
 use alloc::task::Wake;
-use super::user_task::TaskId;
+use crate::task::task_queue::{PrioScheduler, Scheduler};
+use super::task_queue::TaskId;
 
 pub struct TaskWaker {
     tid: TaskId,
-    prio: usize,
-    queue: Arc<Mutex<Box<TaskQueue>>>,
+    scheduler: Arc<Mutex<Box<PrioScheduler>>>,
 }
 
 impl TaskWaker {
-    pub fn new(tid: TaskId, prio: usize, queue: Arc<Mutex<Box<TaskQueue>>>) -> Waker {
+    pub fn new(tid: TaskId, prio: usize, scheduler: Arc<Mutex<Box<PrioScheduler>>>) -> Waker {
         Waker::from(
             Arc::new(Self {
                     tid,
-                    prio,
-                    queue,
+                    scheduler
                 }
             )
         )
     }
 
     fn wake_task(&self) {
-        self.queue.lock().add_tid(self.tid, self.prio);
+        self.scheduler.lock().push(self.tid);
     }
 }
 

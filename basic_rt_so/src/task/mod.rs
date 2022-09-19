@@ -5,7 +5,7 @@ mod task_queue;
 mod manager;
 mod ccmap;
 
-pub use user_task::{UserTask, TaskId, alloc_task_id};
+pub use user_task::{UserTask, alloc_task_id};
 use manager::{MANAGER, Manager};
 use crate::config::{MAX_USER, MAX_THREAD, PRIO_NUM};
 use alloc::{vec::Vec, collections::BTreeSet};
@@ -22,7 +22,9 @@ use lazy_static::*;
 
 pub use manager::check_callback;
 pub use ccmap::{wake_kernel_tid, wrmap_register};
-use crate::task::manager::{BITMAPS, CALLBACKS, CallbackTask};
+use crate::task::manager::{BITMAPS, CALLBACKS, CallbackTask, CBTID};
+use crate::task::task_queue::Scheduler;
+pub use crate::task::task_queue::TaskId;
 
 #[no_mangle]
 pub fn user_thread_main(pid: usize, thread_id: usize) {
@@ -33,13 +35,13 @@ pub fn user_thread_main(pid: usize, thread_id: usize) {
         let tid;
         {
             // disable_timer_interrupt();
-            task = MANAGER[pid][thread_id].user_fetch();
+            task = MANAGER[pid][thread_id].fetch();
             // enable_timer_interrupt();
             if task.is_none() {
-                if wait_task.is_empty() {
-                    break;
-                }
-                uyield();
+                // if wait_task.is_empty() {
+                //     break;
+                // }
+                // uyield();
                 continue;
             }
             tid = task.clone().unwrap().tid;
@@ -47,13 +49,13 @@ pub fn user_thread_main(pid: usize, thread_id: usize) {
         // uprintln!("user current task is {}", task.clone().unwrap().tid.get_val());
         match task.clone().unwrap().execute() {
             Poll::Ready(_) => {
-                uprintln!("remove tid: {}", tid.0);
-                wait_task.remove(&tid.0);
+                uprintln!("remove tid: {}", tid.tid);
+                wait_task.remove(&tid.tid);
                 // MANAGER[pid].lock().tasks.remove(&tid);
             },
             Poll::Pending => {
-                uprintln!("insert tid: {}", tid.0);
-                wait_task.insert(tid.0);
+                uprintln!("insert tid: {}", tid.tid);
+                wait_task.insert(tid.tid);
                 // MANAGER[pid].lock().add(task.unwrap());
             },
         }
@@ -72,12 +74,14 @@ pub fn kernel_thread_main() {
         let tid;
         {
             let mut ex = MANAGER[0][0].clone();
-            task = ex.kernel_fetch();
+            task = ex.fetch();
             if task.is_none() { break; }
             tid = task.clone().unwrap().tid;
+
         }
+
         unsafe {
-            CUR_COROUTINE = tid.get_val();
+            CUR_COROUTINE = tid.tid;
             // crate::kprintln!("kernel cur_coroutine is {}", CUR_COROUTINE);                             
         }
         match task.clone().unwrap().execute() {
@@ -98,9 +102,9 @@ pub fn kernel_thread_main() {
 pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
                               pid: usize, thread_id: usize, tid: usize){
     // disable_timer_interrupt();
-    let task_queue = MANAGER[pid][thread_id].task_queue.clone();
-    let task = Arc::new(UserTask::new(Mutex::new(future), prio, task_queue, tid));
-    MANAGER[pid][thread_id].add(task);
+    let scheduler = MANAGER[pid][thread_id].scheduler.clone();
+    let task = Arc::new(UserTask::new(Mutex::new(future), prio, scheduler, tid));
+    MANAGER[pid][thread_id].add(task, TaskId{tid, prio});
     // enable_timer_interrupt();
 }
 
@@ -125,8 +129,12 @@ pub fn update_global_bitmap() {
     let mut u_maps:Vec<usize> = Vec::new();
     for i in 0..MAX_USER {
         for j in 0..MAX_THREAD {
-            // let bitmap_val = MANAGER[i][j].lock().task_queue.lock().bitmap.get_val();
-            let bitmap_val = BITMAPS[i][j].get_val();
+            let mut bitmap_val: usize = 0;
+            let lock = MANAGER[i][j].scheduler.try_lock();
+            if lock.is_some() {
+                bitmap_val = lock.unwrap().bitmap.get_val();
+            }
+            // let bitmap_val = BITMAPS[i][j].get_val();
             u_maps.push(bitmap_val);
             ans = ans | bitmap_val;
         }
@@ -163,10 +171,19 @@ pub fn kernel_current_corotine() -> usize {
 
 #[no_mangle]
 pub fn add_callback(pid: usize, thread_id: usize, tid: usize) -> bool {
-    let mut ex = MANAGER[pid][thread_id].clone();
-    kprintln!("process {} add_callback {}", pid, tid);
-    let res = ex.add_callback(TaskId::get_tid_by_usize(tid));
-    if !res {
+    {
+        let op_cb_tid = CBTID.try_lock();
+        match op_cb_tid {
+            Some(mut cb_tid) => {
+                cb_tid.add(tid);
+            }
+            _ => {}
+        }
+    }
+
+    if MANAGER[pid][thread_id].re_back(tid) {
+        kprintln!("process {} add_callback {}", pid, tid);
+    } else {
         CALLBACKS.lock().push(Arc::new(
             Mutex::new(
                 CallbackTask {
@@ -177,9 +194,8 @@ pub fn add_callback(pid: usize, thread_id: usize, tid: usize) -> bool {
                 }
             )
         ));
-        return false;
     }
-    true
+    false
 }
 
 // 当前内核进程不会被抢占，且该函数会最先调用，无需考虑并发安全
@@ -189,7 +205,7 @@ pub fn update_callback() {
     for index in 0..len {
         let mut callback_task = CALLBACKS.lock().get(index).unwrap().clone();
         let mut ex = MANAGER[callback_task.lock().pid][callback_task.lock().thread_id].clone();
-        let res = ex.add_callback(TaskId::get_tid_by_usize(callback_task.lock().tid));
+        let res = ex.re_back(callback_task.lock().tid);
         if res {
             callback_task.lock().is_valid = false;
         }

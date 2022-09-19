@@ -19,7 +19,14 @@
   <component name="ChangeListManager">
     <list default="true" id="65db11da-4d68-4f41-9d22-08c491f37b46" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_waker.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/task_waker.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/lkm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/lkm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,19 +58,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "last_opened_file_path": "/home/ctrlz/workSpace/rCore_proj/async-rCore/test/schedule_module",
-    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "settings.editor.selected.configurable": "editor.preferences.fonts.default"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/ctrlz/workSpace/rCore_proj/async-rCore/test/async-rCore&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;
   }
-}]]></component>
+}</component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
@@ -88,7 +95,9 @@
       <workItem from="1663211785479" duration="3599000" />
       <workItem from="1663223640559" duration="7509000" />
       <workItem from="1663239273797" duration="1610000" />
-      <workItem from="1663404319887" duration="16042000" />
+      <workItem from="1663404319887" duration="20237000" />
+      <workItem from="1663584555253" duration="12752000" />
+      <workItem from="1663597332592" duration="1634000" />
     </task>
     <servers />
   </component>
