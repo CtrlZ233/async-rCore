@@ -182,6 +182,7 @@ pub fn add_callback(pid: usize, thread_id: usize, tid: usize) -> bool {
     true
 }
 
+// 当前内核进程不会被抢占，且该函数会最先调用，无需考虑并发安全
 #[no_mangle]
 pub fn update_callback() {
     let len = CALLBACKS.lock().len();
