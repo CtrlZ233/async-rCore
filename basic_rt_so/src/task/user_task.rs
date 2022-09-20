@@ -2,11 +2,12 @@ use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::future::Future;
 use core::pin::Pin;
+use core::ptr::null;
 use core::sync::atomic::{AtomicUsize, Ordering};
-use core::task::{Waker, Poll, Context};
+use core::task::{Waker, Poll, Context, RawWaker, RawWakerVTable};
 use spin::Mutex;
 use crate::console::print;
-use crate::task::task_queue::{PrioScheduler, TaskId};
+use crate::task::schduler::{PrioScheduler, TaskId};
 
 use super::{task_waker::TaskWaker};
 
@@ -29,13 +30,16 @@ pub struct UserTask{
 
 impl UserTask{
     //创建一个协程
-    pub fn new(future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>, prio: usize, scheduler: Arc<Mutex<Box<PrioScheduler>>>, tid: usize) -> Self{
+    pub fn new(future: Mutex<Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>>, prio: usize, tid: usize) -> Self{
         let task_id = TaskId{tid, prio};
-        UserTask{
-            tid: task_id,
-            future,
-            waker: Arc::new(TaskWaker::new(task_id, prio, scheduler)),
+        unsafe {
+            UserTask{
+                tid: task_id,
+                future,
+                waker: Arc::new(TaskWaker::new()),
+            }
         }
+
     }
 
     pub fn execute(& self) -> Poll<()> {

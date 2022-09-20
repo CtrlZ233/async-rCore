@@ -1,7 +1,7 @@
 mod user_task;
 mod bitmap;
 mod task_waker;
-mod task_queue;
+mod schduler;
 mod manager;
 mod ccmap;
 
@@ -23,8 +23,8 @@ use lazy_static::*;
 pub use manager::check_callback;
 pub use ccmap::{wake_kernel_tid, wrmap_register};
 use crate::task::manager::{BITMAPS, CALLBACKS, CallbackTask, CBTID};
-use crate::task::task_queue::Scheduler;
-pub use crate::task::task_queue::TaskId;
+use crate::task::schduler::Scheduler;
+pub use crate::task::schduler::TaskId;
 
 #[no_mangle]
 pub fn user_thread_main(pid: usize, thread_id: usize) {
@@ -38,10 +38,10 @@ pub fn user_thread_main(pid: usize, thread_id: usize) {
             task = MANAGER[pid][thread_id].fetch();
             // enable_timer_interrupt();
             if task.is_none() {
-                // if wait_task.is_empty() {
-                //     break;
-                // }
-                // uyield();
+                if wait_task.is_empty() {
+                    break;
+                }
+                uyield();
                 continue;
             }
             tid = task.clone().unwrap().tid;
@@ -102,9 +102,8 @@ pub fn kernel_thread_main() {
 pub fn add_task_with_priority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
                               pid: usize, thread_id: usize, tid: usize){
     // disable_timer_interrupt();
-    let scheduler = MANAGER[pid][thread_id].scheduler.clone();
-    let task = Arc::new(UserTask::new(Mutex::new(future), prio, scheduler, tid));
-    MANAGER[pid][thread_id].add(task, TaskId{tid, prio});
+    let task = Arc::new(UserTask::new(Mutex::new(future), prio, tid));
+    MANAGER[pid][thread_id].add(task, tid, prio);
     // enable_timer_interrupt();
 }
 
@@ -194,6 +193,7 @@ pub fn add_callback(pid: usize, thread_id: usize, tid: usize) -> bool {
                 }
             )
         ));
+        kprintln!("insert global callback and wake later. tid is {}", tid);
     }
     false
 }
@@ -204,7 +204,9 @@ pub fn update_callback() {
     let len = CALLBACKS.lock().len();
     for index in 0..len {
         let mut callback_task = CALLBACKS.lock().get(index).unwrap().clone();
-        let mut ex = MANAGER[callback_task.lock().pid][callback_task.lock().thread_id].clone();
+        let pid = callback_task.lock().pid;
+        let thread_id = callback_task.lock().thread_id;
+        let mut ex = MANAGER[pid][thread_id].clone();
         let res = ex.re_back(callback_task.lock().tid);
         if res {
             callback_task.lock().is_valid = false;

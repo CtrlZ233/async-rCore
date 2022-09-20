@@ -22,11 +22,9 @@
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/schduler.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_waker.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/task_waker.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/os/src/lkm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/lkm.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +95,8 @@
       <workItem from="1663239273797" duration="1610000" />
       <workItem from="1663404319887" duration="20237000" />
       <workItem from="1663584555253" duration="12752000" />
-      <workItem from="1663597332592" duration="1634000" />
+      <workItem from="1663597332592" duration="1753000" />
+      <workItem from="1663631490157" duration="7137000" />
     </task>
     <servers />
   </component>

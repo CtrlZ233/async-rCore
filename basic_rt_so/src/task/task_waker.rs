@@ -3,28 +3,21 @@ use spin::Mutex;
 use alloc::boxed::Box;
 use core::task::Waker;
 use alloc::task::Wake;
-use crate::task::task_queue::{PrioScheduler, Scheduler};
-use super::task_queue::TaskId;
+use crate::task::schduler::{PrioScheduler, Scheduler};
+use super::schduler::TaskId;
 
-pub struct TaskWaker {
-    tid: TaskId,
-    scheduler: Arc<Mutex<Box<PrioScheduler>>>,
-}
+pub struct TaskWaker {}
 
+// 仅用于存储执行上下文，我们手动唤醒任务
 impl TaskWaker {
-    pub fn new(tid: TaskId, prio: usize, scheduler: Arc<Mutex<Box<PrioScheduler>>>) -> Waker {
+    pub fn new() -> Waker {
         Waker::from(
-            Arc::new(Self {
-                    tid,
-                    scheduler
-                }
+            Arc::new(Self {}
             )
         )
     }
 
-    fn wake_task(&self) {
-        self.scheduler.lock().push(self.tid);
-    }
+    fn wake_task(&self) {}
 }
 
 impl Wake for TaskWaker {

@@ -4,6 +4,7 @@ use lazy_static::*;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::sync::Arc;
 use alloc::{vec, vec::Vec};
+use core::borrow::BorrowMut;
 use spin::Mutex;
 
 use super::{
@@ -11,7 +12,7 @@ use super::{
     bitmap::BitMap,
 };
 use crate::config::{MAX_USER, MAX_THREAD, PRIO_NUM, CAP};
-use crate::task::task_queue::{Scheduler, TaskId, PrioScheduler};
+use crate::task::schduler::{Scheduler, TaskId, PrioScheduler};
 
 lazy_static!{
     pub static ref BITMAPS: Vec<Vec<BitMap>> = (0..MAX_USER).map(|_|
@@ -43,10 +44,10 @@ lazy_static!{
 }
 
 pub struct Manager<T, S> where S: Scheduler {
-    pub tasks: Mutex<BTreeMap<usize, Arc<T>>>,
+    tasks: Mutex<BTreeMap<usize, Arc<T>>>,
     pub scheduler: Arc<Mutex<Box<S>>>,
-    pub prio_map: Mutex<BTreeMap<usize, usize>>,
-    pub current: Mutex<Option<usize>>,
+    prio_map: Mutex<BTreeMap<usize, usize>>,
+    current: Mutex<Option<usize>>,
 }
 
 impl<T, S: Scheduler> Manager<T, S> {
@@ -62,14 +63,16 @@ impl<T, S: Scheduler> Manager<T, S> {
 
     pub fn fetch(&self) -> Option<Arc<T>> {
         let task_id = self.scheduler.lock().pop();
-        match task_id {
-            Some(id) => {
-                *self.current.lock() = Some(id.tid);
-                if let Some(ret) = self.tasks.lock().get(&id.tid) {
-                    return Some(ret.clone());
-                }
-            }
-            _ => {}
+        if let Some(tid) = task_id {
+            *self.current.lock() = Some(tid.tid);
+            return self.get(tid.tid);
+        }
+        None
+    }
+
+    pub fn get(&self, tid: usize) -> Option<Arc<T>> {
+        if let Some(ret) = self.tasks.lock().get(&tid) {
+            return Some(ret.clone());
         }
         None
     }
@@ -77,34 +80,31 @@ impl<T, S: Scheduler> Manager<T, S> {
     pub fn re_back(&self, tid: usize) -> bool {
         let res = self.scheduler.try_lock();
         let prio_map = self.prio_map.try_lock();
+        if res.is_none() {
+            kprintln!("acquire scheduler failed.");
+            return false;
+        }
         if prio_map.is_none() {
+            kprintln!("acquire prio_map failed.");
             return false;
         }
         let op_prio = prio_map.unwrap().get(&tid).copied();
-        match (res, op_prio) {
-            (Some(mut lock), Some(prio)) => lock.push(TaskId{tid, prio}),
+        match op_prio {
+            Some(prio) => res.unwrap().push(TaskId{tid, prio}),
             _ => return false,
         }
         true
     }
 
-    /// 取出一个任务，首先会将回调队列中的所有任务唤醒，之后再取出优先级最高的任务
-    // pub fn user_fetch(&self) -> Option<Arc<T>> {
-    //     let callback_queue = self.callback_queue.clone();
-    //     while callback_queue.lock().len() != 0 {
-    //         // uprintln!("need wake");
-    //         if let Some(id) = callback_queue.lock().pop_front() {
-    //             CBTID.lock().add(id.get_val());
-    //             self.tasks.lock().get(&id).unwrap().waker.wake_by_ref();
-    //         }
-    //     }
-    //     self.kernel_fetch()
-    // }
-    /// 添加任务
-    pub fn add(&self, task: Arc<T>, tid: TaskId) {
-        self.scheduler.lock().push(tid);
-        self.tasks.lock().insert(tid.tid, task);
-        self.prio_map.lock().insert(tid.tid, tid.prio);
+    pub fn add(&self, task: Arc<T>, tid: usize, prio: usize) {
+        self.scheduler.lock().push(TaskId{tid, prio});
+        self.tasks.lock().insert(tid, task);
+        self.prio_map.lock().insert(tid, prio);
+    }
+
+    pub fn remove(&self, tid: usize) {
+        self.tasks.lock().remove(&tid);
+        self.prio_map.lock().remove(&tid);
     }
 
     /// 判断 Manager 中是否有任务

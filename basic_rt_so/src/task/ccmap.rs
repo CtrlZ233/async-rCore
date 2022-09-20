@@ -5,6 +5,7 @@ use lazy_static::*;
 use alloc::collections::BTreeMap;
 use spin::Mutex;
 use alloc::sync::Arc;
+use crate::add_callback;
 use super::TaskId;
 
 
@@ -40,8 +41,7 @@ impl WRMap {
 pub fn wake_kernel_tid(pid: usize, key: usize) {
     let kernel_tid = WRMAP.lock().get_rid(key);
     if kernel_tid.is_some() {
-        // kprintln!("wake up kernel_tid {}", kernel_tid.unwrap());
-        crate::task::MANAGER[0][0].tasks.lock().get(&kernel_tid.unwrap()).unwrap().waker.wake_by_ref()
+        add_callback(0, 0, kernel_tid.unwrap());
     }
 }
 
