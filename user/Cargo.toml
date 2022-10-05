@@ -13,7 +13,7 @@ riscv = { path = "../third-party/riscv", features = ["inline-asm"] }
 spin = "0.9"
 woke = "0.0.2"
 futures = { version = "0.3", default-features = false }
-
+lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 
 [profile.release]
 debug = true

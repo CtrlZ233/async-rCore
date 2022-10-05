@@ -19,13 +19,14 @@ use crate::timer::remove_timer;
 
 pub use context::TaskContext;
 pub use id::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
-pub use manager::{add_task, remove_task, pid2process, remove_from_pid2process};
+pub use manager::{add_task, pid2process, remove_from_pid2process};
 pub use processor::{
     current_kstack_top, current_process, current_task, current_trap_cx, current_trap_cx_user_va,
-    current_user_token, run_tasks, schedule, take_current_task,
+    current_user_token, run_tasks, schedule, take_current_task, hart_id
 };
 pub use signal::SignalFlags;
 pub use task::{TaskControlBlock, TaskStatus};
+use crate::task::manager::remove_process;
 
 pub fn suspend_current_and_run_next() {
 
@@ -72,6 +73,7 @@ pub fn exit_current_and_run_next(exit_code: i32) {
     if tid == 0 {
         // log::warn!("here");
         remove_from_pid2process(process.getpid());
+
         let mut process_inner = process.inner_exclusive_access();
         // mark this process as a zombie process
         process_inner.is_zombie = true;
@@ -86,6 +88,7 @@ pub fn exit_current_and_run_next(exit_code: i32) {
                 initproc_inner.children.push(child.clone());
             }
         }
+        remove_process(Arc::clone(&process));
 
         // deallocate user res (including tid/trap_cx/ustack) of all threads
         // it has to be done before we dealloc the whole memory_set
@@ -99,7 +102,7 @@ pub fn exit_current_and_run_next(exit_code: i32) {
             // Mention that we do not need to consider Mutex/Semaphore since they
             // are limited in a single process. Therefore, the blocked tasks are
             // removed when the PCB is deallocated.
-            remove_inactive_task(Arc::clone(&task));
+            remove_timer(Arc::clone(&task));
             let mut task_inner = task.inner_exclusive_access();
             if let Some(res) = task_inner.res.take() {
                 recycle_res.push(res);
@@ -119,6 +122,7 @@ pub fn exit_current_and_run_next(exit_code: i32) {
         process_inner.fd_table.clear();
         // remove all tasks
         process_inner.tasks.clear();
+        process_inner.ready_tasks.clear();
     }
     drop(process);
     // we do not have to save task context
@@ -150,10 +154,6 @@ pub fn current_add_signal(signal: SignalFlags) {
     process_inner.signals |= signal;
 }
 
-pub fn remove_inactive_task(task: Arc<TaskControlBlock>) {
-    remove_task(Arc::clone(&task));
-    remove_timer(Arc::clone(&task));
-}
 
 pub fn add_user_test(){
     // log::debug!("add user task");

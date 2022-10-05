@@ -1,4 +1,3 @@
-use crate::lkm::alloc_task_id;
 use super::fs::{sys_write, sys_close};
 use crate::task::{current_process, current_user_token};
 use crate::mm::{translated_byte_buffer, UserBuffer};
@@ -8,38 +7,9 @@ use crate::mm::{translated_byte_buffer, UserBuffer};
 pub fn async_sys_write(fd: usize, buf: *const u8, len: usize, _tid: usize, _pid: usize, read_fd: usize) -> isize {
     sys_write(fd, buf, len);
     sys_close(fd);
-    // 向文件中写完数据之后，需要唤醒内核当中的协程，将管道中的数据写到缓冲区中，因此 pid 固定为 0
-    crate::lkm::wake_kernel_tid(0, read_fd);
-    // println!("wakeup fd: {}", read_fd);
-    // log::debug!("async_sys_write do nothing");
     0
 }
 
 pub fn async_sys_read(fd: usize, buf: *const u8, len: usize, tid: usize, pid: usize, thread_id: usize) -> isize {
-    // log::debug!("async_sys_read do nothing");
-    let token = current_user_token();
-    let process = current_process();
-    // let task = current_task().unwrap();
-    // let inner = task.acquire_inner_lock();
-    let inner = process.inner_exclusive_access();
-    if fd >= inner.fd_table.len() {
-        return -1;
-    }
-    if let Some(file) = &inner.fd_table[fd] {
-        let file = file.clone();
-        if !file.readable() {
-            return -1;
-        }
-        // release Task lock manually to avoid deadlock
-        drop(inner);
-        //file.read(
-        //    UserBuffer::new(translated_byte_buffer(token, buf, len))
-        //) as isize
-        let work = file.aread(UserBuffer::new(translated_byte_buffer(token, buf, len)), tid, pid, thread_id, fd);
-        let kernel_tid = alloc_task_id();
-        crate::lkm::add_task_with_prority(work, 0, 0, 0, kernel_tid);
-        0
-    } else {
-        -1
-    }    
+    -1
 }

@@ -44,7 +44,6 @@ $(KERNEL_BIN): kernel
 
 
 fs-img: $(APPS)
-	@cd ../basic_rt_so && make build
 	@cd ../user && make build
 	@rm -f $(FS_IMG)
 	@cd ../easy-fs-fuse && cargo run --release -- -s ../user/src/bin/ -t ../user/target/riscv64gc-unknown-none-elf/release/
@@ -52,13 +51,11 @@ fs-img: $(APPS)
 $(APPS):
 
 kernel:
-	@cd ../basic_rt_so && make build
 	@cd ../user && make build
 	@echo Platform: $(BOARD)
 	@cargo build $(MODE_ARG)
 
 clean:
-	@cd ../basic_rt_so && cargo clean
 	@cd ../user && cargo clean
 	@cargo clean
 
@@ -77,7 +74,7 @@ run: run-inner
 run-inner: build
 ifeq ($(BOARD),qemu)
 	@qemu-system-riscv64 \
-		-machine virt \
+		-machine virt -smp 4\
 		-nographic \
 		-bios $(BOOTLOADER) \
 		-device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) \

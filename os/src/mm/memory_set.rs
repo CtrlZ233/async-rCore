@@ -184,7 +184,7 @@ impl MemorySet {
         memory_set.map_trampoline();
 
         // memory_set.map_share_module();
-        memory_set.add_user_module(&crate::lkm::BASIC_RT_MEMORYSET);
+        // memory_set.add_user_module(&crate::lkm::BASIC_RT_MEMORYSET);
 
         // map program headers of elf, with U flag
         let elf = xmas_elf::ElfFile::new(elf_data).unwrap();

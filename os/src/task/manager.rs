@@ -2,56 +2,64 @@ use super::{ProcessControlBlock, TaskControlBlock};
 use crate::sync::UPSafeCell;
 use alloc::collections::{BTreeMap, VecDeque};
 use alloc::sync::Arc;
+use alloc::vec::Vec;
+use core::sync::atomic::Ordering::Relaxed;
 use lazy_static::*;
 
 pub struct TaskManager {
-    ready_queue: VecDeque<Arc<TaskControlBlock>>,
+    process_queue: VecDeque<Arc<ProcessControlBlock>>,
 }
 
 /// A simple FIFO scheduler.
 impl TaskManager {
     pub fn new() -> Self {
         Self {
-            ready_queue: VecDeque::new(),
+            process_queue: VecDeque::new(),
         }
     }
     pub fn add(&mut self, task: Arc<TaskControlBlock>) {
-        self.ready_queue.push_back(task);
-    }
-    pub fn fetch(&mut self) -> Option<Arc<TaskControlBlock>> {
-        // self.ready_queue.pop_front()
-        let n = self.ready_queue.len();
-        if n == 0 { return None; }
-        let mut peek;
-        let mut cnt = 0;
-        loop {
-            peek = self.ready_queue.pop_front().unwrap();
-            let pid = peek.process.upgrade().unwrap().getpid();
-            let thread_id = peek.inner_exclusive_access()
-                .res
-                .as_ref()
-                .unwrap()
-                .tid;
-            if crate::lkm::check_prio_pid(pid, thread_id) {
-                // pid 为 0，且 PRIO_PIDS 中存在，表示内核有协程需要执行，返回到 run_task 的 loop 循环的 else 分支来执行
-                if pid == 0 {
-                    self.ready_queue.push_back(peek);
-                    return None;
-                }
-                return Some(peek); 
-            }
-            self.ready_queue.push_back(peek);
-            cnt += 1;
-            if cnt >= n { break; }
+        if let Some(process) = task.process.upgrade() {
+            process.inner_exclusive_access().ready_tasks.push(task);
         }
-        self.ready_queue.pop_front()
     }
-    pub fn remove(&mut self, task: Arc<TaskControlBlock>) {
-        if let Some((id, _)) = self.ready_queue
+
+    pub fn push(&mut self, process: Arc<ProcessControlBlock>) {
+        self.process_queue.push_back(process);
+    }
+
+    pub fn fetch(&mut self) -> Option<Arc<TaskControlBlock>> {
+        // println!("task size: {}", self.process_queue[0].inner_exclusive_access().ready_tasks.len());
+        let mut index: isize = -1;
+        let mut max_prio: isize = -1;
+        for (i, process) in self.process_queue.iter().enumerate() {
+            let mut process_inner = process.inner_exclusive_access();
+            if process_inner.ready_tasks.is_empty() {
+                continue;
+            }
+            let prio = process_inner.get_prio();
+            // println!("pid: {}, prio: {}", process.pid.0, prio);
+            if prio as isize > max_prio {
+                index = i as isize;
+                max_prio = prio as isize;
+            }
+        }
+        // println!("index: {}, task size: {}",index, self.process_queue[0].inner_exclusive_access().ready_tasks.len());
+        if index != -1 {
+            let task = self.process_queue[index as usize].inner_exclusive_access().ready_tasks.pop();
+            let process = self.process_queue[index as usize].clone();
+            self.process_queue.remove(index as usize);
+            self.process_queue.push_back(process);
+            return task;
+        }
+        None
+
+    }
+    pub fn remove(&mut self, process: Arc<ProcessControlBlock>) {
+        if let Some((id, _)) = self.process_queue
             .iter()
             .enumerate()
-            .find(|(_, t)| Arc::as_ptr(t) == Arc::as_ptr(&task)) {
-                self.ready_queue.remove(id);
+            .find(|(_, t)| Arc::as_ptr(t) == Arc::as_ptr(&process)) {
+                self.process_queue.remove(id);
             }
     }
 }
@@ -67,8 +75,12 @@ pub fn add_task(task: Arc<TaskControlBlock>) {
     TASK_MANAGER.exclusive_access().add(task);
 }
 
-pub fn remove_task(task: Arc<TaskControlBlock>) {
-    TASK_MANAGER.exclusive_access().remove(task);
+pub fn add_process(process: Arc<ProcessControlBlock>) {
+    TASK_MANAGER.exclusive_access().push(process);
+}
+
+pub fn remove_process(process: Arc<ProcessControlBlock>) {
+    TASK_MANAGER.exclusive_access().remove(process);
 }
 
 pub fn fetch_task() -> Option<Arc<TaskControlBlock>> {

@@ -26,6 +26,8 @@ const SYSCALL_SEMAPHORE_DOWN: usize = 1022;
 const SYSCALL_CONDVAR_CREATE: usize = 1030;
 const SYSCALL_CONDVAR_SIGNAL: usize = 1031;
 const SYSCALL_CONDVAR_WAIT: usize = 1032;
+const SYSCALL_INIT_COROUTINE: usize = 1033;
+const SYSCALL_GET_PRIO: usize = 1034;
 
 mod fs;
 mod process;
@@ -33,6 +35,7 @@ mod sync;
 mod thread;
 mod async_wr;
 
+use core::sync::atomic::AtomicUsize;
 use fs::*;
 use process::*;
 use sync::*;
@@ -68,6 +71,8 @@ pub fn syscall(syscall_id: usize, args: [usize; 3]) -> isize {
         SYSCALL_CONDVAR_SIGNAL => sys_condvar_signal(args[0]),
         SYSCALL_CONDVAR_WAIT => sys_condvar_wait(args[0], args[1]),
         SYSCALL_SET_TIMER_INT => sys_set_timer_interrupt(args[0]),
+        SYSCALL_INIT_COROUTINE => sys_init_coroutine(args[0] as *mut AtomicUsize),
+        SYSCALL_GET_PRIO => sys_get_prio(),
         _ => panic!("Unsupported syscall_id: {}", syscall_id),
     }
 }

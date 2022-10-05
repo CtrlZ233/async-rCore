@@ -9,16 +9,23 @@ pub mod console;
 mod lang_items;
 mod syscall;
 mod syscall6;
+pub mod coroutine;
 
 extern crate alloc;
 #[macro_use]
 extern crate bitflags;
 
 use alloc::vec::Vec;
+use core::arch::asm;
+use core::future::Future;
+use core::pin::Pin;
+use core::task::{Context, Poll};
 use buddy_system_allocator::LockedHeap;
 use syscall::*;
 
-const USER_HEAP_SIZE: usize = 32768;
+pub use coroutine::{init_coroutine, add_task_with_priority, add_callback_task, coroutine_run};
+
+const USER_HEAP_SIZE: usize = 3276800;
 
 static mut HEAP_SPACE: [u8; USER_HEAP_SIZE] = [0; USER_HEAP_SIZE];
 
@@ -203,6 +210,18 @@ pub fn create_desktop() {
     sys_create_desktop();
 }
 
+pub fn get_prio() -> usize {
+    sys_get_prio() as usize
+}
+
+pub fn hart_id() -> usize {
+    let hart_id: usize;
+    unsafe {
+        asm!("mv {}, tp", out(reg) hart_id);
+    }
+    hart_id
+}
+
 #[macro_export]
 macro_rules! vstore {
     ($var_ref: expr, $value: expr) => {
@@ -223,44 +242,6 @@ macro_rules! memory_fence {
         core::sync::atomic::fence(core::sync::atomic::Ordering::SeqCst)
     };
 }
-/************************ 协程接口初始化 ********************************************/
-use core::mem::transmute;
-use alloc::boxed::Box;
-use core::pin::Pin;
-use core::future::Future;
-use core::task::{Context, Poll};
-pub const SYMBOL_ADDR: *const usize = 0x8701a000usize as *const usize;
-
-pub fn alloc_task_id() -> usize {
-    unsafe {
-        let alloc_task_id: fn() -> usize = transmute(*(SYMBOL_ADDR.add(10)) as usize);
-        alloc_task_id()
-    }
-}
-
-pub fn add_task_with_prority(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
-                             pid: usize, thread_id: usize, tid: usize) {
-    unsafe {
-        let add_task_with_prority: fn(future: Pin<Box<dyn Future<Output=()> + 'static + Send + Sync>>, prio: usize,
-                                      pid: usize, thread_id: usize, tid: usize) = transmute(*SYMBOL_ADDR as usize);
-        add_task_with_prority(future, prio, pid, thread_id, tid);
-    }
-} 
-
-pub fn user_thread_main(pid: usize, thread_id: usize) {
-    unsafe {
-        let user_thread_main: fn(pid: usize, thread_id: usize) = transmute(*(SYMBOL_ADDR.add(2)) as usize);
-        user_thread_main(pid, thread_id);
-    }
-}
-
-pub fn check_callback(tid: usize) -> bool {
-    unsafe {
-        let check_callback: fn(tid: usize) -> bool = transmute(*(SYMBOL_ADDR.add(9)) as usize);
-        check_callback(tid)
-    }
-}
-
 
 
 /************************ 异步系统调用 **************************************/
@@ -310,7 +291,7 @@ impl Future for AsyncCall {
             self.cnt += 1;
         }
 
-        if check_callback(self.tid) {
+        if true {
             return Poll::Ready(());
         } else {
             return Poll::Pending;

@@ -18,13 +18,74 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="65db11da-4d68-4f41-9d22-08c491f37b46" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/user/src/bin/process.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user/src/coroutine/config.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user/src/coroutine/manager.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user/src/coroutine/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user/src/coroutine/scheduler.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user/src/coroutine/task_waker.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user/src/coroutine/user_task.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_queue.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/schduler.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_waker.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/task_waker.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" beforeDir="false" afterPath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/configurationCache.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/dryrun.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/targets.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/.cargo/config" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/Cargo.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/Makefile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/cbq.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/config.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/console.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/entry.asm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/init.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/lang_items.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/linker.ld" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/main.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/sbi.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/syscall.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/bitmap.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/ccmap.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/manager.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/mod.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/schduler.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/task_waker.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/task/user_task.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/context.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/fifo.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/mod.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/processor.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/scheduler.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/switch.asm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/thread.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/thread_pool.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/basic_rt_so/src/thread/user_stack.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/easy-fs-fuse/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/easy-fs-fuse/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/os/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/config.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/entry.asm" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/entry.asm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/fs/pipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/fs/pipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/lkm.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/mm/memory_set.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/mm/memory_set.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/mm/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/mm/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/sbi.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/sbi.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/syscall/async_wr.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/syscall/async_wr.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/syscall/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/syscall/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/syscall/process.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/syscall/process.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/task/manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/task/manager.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/task/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/task/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/task/process.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/task/process.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/task/processor.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/task/processor.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/os/src/trap/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/os/src/trap/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/user/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/user/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/bin/async_pipe_test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/bin/async_pipe_test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/bin/initproc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/bin/initproc.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/bin/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/bin/test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/bin/thread.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/bin/thread.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/src/syscall.rs" beforeDir="false" afterPath="$PROJECT_DIR$/user/src/syscall.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,8 +125,9 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/ctrlz/workSpace/rCore_proj/async-rCore/test/async-rCore&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/ctrlz/workSpace/rCore_proj/async-rCore/test/coroutine_module&quot;,
     &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;org.rust.disableDetachedFileInspection/home/ctrlz/workSpace/rCore_proj/async-rCore/test/async-rCore/user/src/bin/process.rs&quot;: &quot;true&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;
   }
 }</component>
@@ -97,6 +159,12 @@
       <workItem from="1663584555253" duration="12752000" />
       <workItem from="1663597332592" duration="1753000" />
       <workItem from="1663631490157" duration="7137000" />
+      <workItem from="1664930400673" duration="2253000" />
+      <workItem from="1664932657105" duration="16122000" />
+      <workItem from="1664955845154" duration="5366000" />
+      <workItem from="1664961278366" duration="3971000" />
+      <workItem from="1664965258569" duration="202000" />
+      <workItem from="1664965649562" duration="3508000" />
     </task>
     <servers />
   </component>

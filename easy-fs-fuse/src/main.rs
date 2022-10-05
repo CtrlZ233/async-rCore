@@ -82,12 +82,6 @@ fn easy_fs_pack() -> std::io::Result<()> {
         inode.write_at(0, all_data.as_slice());
     }
 
-    let mut host_file = File::open("../basic_rt_so/target/riscv64gc-unknown-none-elf/release/basic_rt_so").unwrap();
-    let mut all_data: Vec<u8> = Vec::new();
-    host_file.read_to_end(&mut all_data).unwrap();
-    let inode = root_inode.create("basic_rt_so").unwrap();
-    inode.write_at(0, all_data.as_slice());
-
     // list apps
     for app in root_inode.ls() {
         println!("{}", app);

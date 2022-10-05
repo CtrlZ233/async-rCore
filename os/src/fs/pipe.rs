@@ -168,47 +168,8 @@ impl File for Pipe {
     // write_tid 表示写的协程，CUR_COROTINE 表示当前的协程，也就是读协程
     fn aread(&self, buf: UserBuffer, tid: usize, pid: usize, thread_id: usize, fd: usize)
         -> Pin<Box<dyn Future<Output = ()>  + 'static + Send + Sync>> {
-        async fn aread_work(s: Pipe, _buf: UserBuffer, tid: usize, pid: usize, thread_id: usize, fd: usize) {
-            assert_eq!(s.readable(), true);
-            let mut buf_iter = _buf.into_iter();
-            // let mut read_size = 0usize;
-            // println!("test3");
-            let mut helper = Box::new(ReadHelper::new());
-            loop {
-                let mut ring_buffer = s.buffer.lock();
-                let loop_read = ring_buffer.available_read();
-                if loop_read == 0 {
-                    // log::warn!("read_size is 0");
-                    if ring_buffer.all_write_ends_closed() {
-                        break ;
-                        //return read_size;
-                    }
-                    drop(ring_buffer);
-                    //suspend_current_and_run_next();
-                    crate::lkm::wrmap_register(fd, crate::lkm::kernel_current_corotine());
-                    // println!("reg fd: {}", fd);
-                    // unsafe { WRMAP.lock().register(write_tid, CUR_COROUTINE); }
-                    helper.as_mut().await;
-                    continue;
-                } 
-                // log::warn!("read_size is {}", loop_read);  
-                // read at most loop_read bytes
-                for _ in 0..loop_read {
-                    if let Some(byte_ref) = buf_iter.next() {
-                        unsafe { *byte_ref = ring_buffer.read_byte(); }
-                        // read_size += 1;
-                    } else {
-                        break;
-                        //return read_size;
-                    }
-                }
-            }
-            // println!("test4");
-            // 将读协程加入到回调队列中，使得用户态的协程执行器能够唤醒读协程
-            crate::lkm::add_callback(pid, thread_id, tid);
-        }
-        // log::warn!("pipe aread");
-        Box::pin(aread_work(self.clone(), buf, tid, pid, thread_id, fd))
+        async fn noimpl() {}
+        Box::pin(noimpl())
 
     }
 }

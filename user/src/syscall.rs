@@ -1,3 +1,5 @@
+use core::sync::atomic::AtomicUsize;
+
 const SYSCALL_DUP: usize = 24;
 const SYSCALL_OPEN: usize = 56;
 const SYSCALL_CLOSE: usize = 57;
@@ -25,6 +27,8 @@ const SYSCALL_SEMAPHORE_DOWN: usize = 1022;
 const SYSCALL_CONDVAR_CREATE: usize = 1030;
 const SYSCALL_CONDVAR_SIGNAL: usize = 1031;
 const SYSCALL_CONDVAR_WAIT: usize = 1032;
+const SYSCALL_INIT_COROUTINE: usize = 1033;
+const SYSCALL_GET_PRIO: usize = 1034;
 
 
 fn syscall(id: usize, args: [usize; 3]) -> isize {
@@ -157,4 +161,12 @@ pub fn sys_condvar_wait(condvar_id: usize, mutex_id: usize) -> isize {
 }
 pub fn sys_create_desktop() -> isize {
     syscall(2000, [0, 0, 0])
+}
+
+pub fn sys_init_coroutine(process_prio: &AtomicUsize) -> isize {
+    syscall(SYSCALL_INIT_COROUTINE, [process_prio as *const AtomicUsize as usize, 0, 0])
+}
+
+pub fn sys_get_prio() -> isize {
+    syscall(SYSCALL_GET_PRIO, [0, 0, 0])
 }

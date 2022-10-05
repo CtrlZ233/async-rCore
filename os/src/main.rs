@@ -28,6 +28,12 @@ extern crate alloc;
 extern crate bitflags;
 
 use core::arch::{global_asm};
+use core::hint;
+use core::sync::atomic::{AtomicBool, Ordering};
+use log::debug;
+use crate::config::CPU_NUM;
+use crate::mm::init_kernel_space;
+use crate::sbi::send_ipi;
 
 
 #[path = "boards/qemu.rs"]
@@ -47,7 +53,6 @@ mod timer;
 mod trap;
 
 mod logging;
-mod lkm;
 
 global_asm!(include_str!("entry.asm"));
 
@@ -63,26 +68,40 @@ fn clear_bss() {
     }
 }
 
-
+static AP_CAN_INIT: AtomicBool = AtomicBool::new(false);
 /// the rust entry-point of os
 #[no_mangle]
-pub fn rust_main() -> ! {
-    clear_bss();
-    logging::init();
-    log::info!("[kernel] Hello, world!");
-    mm::init();
-    mm::remap_test();
-    fs::list_apps();
-    trap::init();
-    trap::enable_timer_interrupt();
+pub fn rust_main(hart_id: usize) -> ! {
+
+    if hart_id == 0 {
+        println!("hart id: {}", hart_id);
+        clear_bss();
+        logging::init();
+        log::info!("[kernel] Hello, world!");
+        mm::init();
+        mm::remap_test();
+        trap::init();
+        task::add_initproc();
+        for i in 1..CPU_NUM {
+            debug!("[kernel {}] Start {}", hart_id, i);
+            let mask: usize = 1 << i;
+            send_ipi(&mask as *const _ as usize);
+        }
+        AP_CAN_INIT.store(true, Ordering::Relaxed);
+    } else {
+        while !AP_CAN_INIT.load(Ordering::Relaxed) {
+            hint::spin_loop();
+        }
+        let hart_id = task::hart_id();
+        init_kernel_space();
+        trap::init();
+    }
     timer::set_next_trigger();
 
-    lkm::init();
-    log::debug!("here");
-
-    task::add_initproc();
-
-    task::add_user_test();
+    if hart_id == 0 {
+        fs::list_apps();
+    }
+    // task::add_user_test();
 
     task::run_tasks();
     log::debug!("here4");

@@ -8,6 +8,7 @@ use crate::timer::get_time_ms;
 use alloc::string::String;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
+use core::sync::atomic::AtomicUsize;
 use crate::trap::{enable_timer_interrupt, disable_timer_interrupt};
 
 pub fn sys_exit(exit_code: i32) -> ! {
@@ -126,5 +127,17 @@ pub fn sys_kill(pid: usize, signal: u32) -> isize {
     } else {
         -1
     }
+}
+
+pub fn sys_init_coroutine(process_prio_ptr: *mut AtomicUsize) -> isize {
+    let token = current_user_token();
+    unsafe {
+        current_process().inner_exclusive_access().init_prio(translated_refmut(token, process_prio_ptr));
+        return 0;
+    }
+}
+
+pub fn sys_get_prio() -> isize {
+    current_process().inner_exclusive_access().get_prio() as isize
 }
 

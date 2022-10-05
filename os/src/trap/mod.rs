@@ -17,6 +17,9 @@ use riscv::register::{
 global_asm!(include_str!("trap.S"));
 
 pub fn init() {
+    unsafe {
+        sie::set_stimer();
+    }
     set_kernel_trap_entry();
 }
 
@@ -89,8 +92,8 @@ pub fn trap_handler() -> ! {
             check_timer();
             // log::debug!("SupervisorTimer occured");
             // 在此处更新位图
-            crate::lkm::update_global_bitmap();
-            crate::lkm::update_callback();
+            // crate::lkm::update_global_bitmap();
+            // crate::lkm::update_callback();
             suspend_current_and_run_next();
         }
         _ => {

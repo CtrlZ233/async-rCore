@@ -18,5 +18,9 @@ pub use page_table::{
 pub fn init() {
     heap_allocator::init_heap();
     frame_allocator::init_frame_allocator();
+    init_kernel_space();
+}
+
+pub fn init_kernel_space() {
     KERNEL_SPACE.exclusive_access().activate();
 }

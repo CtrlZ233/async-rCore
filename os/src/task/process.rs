@@ -12,6 +12,9 @@ use alloc::sync::{Arc, Weak};
 use alloc::vec;
 use alloc::vec::Vec;
 use core::cell::RefMut;
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::Ordering::{Relaxed, SeqCst};
+use crate::task::manager::add_process;
 
 pub struct ProcessControlBlock {
     // immutable
@@ -29,10 +32,12 @@ pub struct ProcessControlBlockInner {
     pub fd_table: Vec<Option<Arc<dyn File + Send + Sync>>>,
     pub signals: SignalFlags,
     pub tasks: Vec<Option<Arc<TaskControlBlock>>>,
+    pub ready_tasks: Vec<Arc<TaskControlBlock>>,
     pub task_res_allocator: RecycleAllocator,
     pub mutex_list: Vec<Option<Arc<dyn Mutex>>>,
     pub semaphore_list: Vec<Option<Arc<Semaphore>>>,
     pub condvar_list: Vec<Option<Arc<Condvar>>>,
+    pub prio: Option<&'static mut AtomicUsize>,
 }
 
 impl ProcessControlBlockInner {
@@ -64,6 +69,17 @@ impl ProcessControlBlockInner {
 
     pub fn get_task(&self, tid: usize) -> Arc<TaskControlBlock> {
         self.tasks[tid].as_ref().unwrap().clone()
+    }
+
+    pub fn init_prio(&mut self, prio: &'static mut AtomicUsize) {
+        self.prio = Some(prio);
+    }
+
+    pub fn get_prio(&self) -> usize {
+        if let Some(prio) = &self.prio {
+            return prio.load(SeqCst);
+        }
+        0
     }
 }
 
@@ -101,10 +117,12 @@ impl ProcessControlBlock {
                     ],
                     signals: SignalFlags::empty(),
                     tasks: Vec::new(),
+                    ready_tasks: Vec::new(),
                     task_res_allocator: RecycleAllocator::new(),
                     mutex_list: Vec::new(),
                     semaphore_list: Vec::new(),
                     condvar_list: Vec::new(),
+                    prio: None,
                 })
             },
         });
@@ -130,10 +148,11 @@ impl ProcessControlBlock {
         // add main thread to the process
         let mut process_inner = process.inner_exclusive_access();
         process_inner.tasks.push(Some(Arc::clone(&task)));
+        process_inner.ready_tasks.push(Arc::clone(&task));
         drop(process_inner);
         insert_into_pid2process(process.getpid(), Arc::clone(&process));
         // add main thread to scheduler
-        add_task(task);
+        add_process(Arc::clone(&process));
         process
     }
 
@@ -230,10 +249,12 @@ impl ProcessControlBlock {
                     fd_table: new_fd_table,
                     signals: SignalFlags::empty(),
                     tasks: Vec::new(),
+                    ready_tasks: Vec::new(),
                     task_res_allocator: RecycleAllocator::new(),
                     mutex_list: Vec::new(),
                     semaphore_list: Vec::new(),
                     condvar_list: Vec::new(),
+                    prio: None,
                 })
             },
         });
@@ -256,6 +277,7 @@ impl ProcessControlBlock {
         // attach task to child process
         let mut child_inner = child.inner_exclusive_access();
         child_inner.tasks.push(Some(Arc::clone(&task)));
+        child_inner.ready_tasks.push(Arc::clone(&task));
         drop(child_inner);
         // modify kstack_top in trap_cx of this thread
         let task_inner = task.inner_exclusive_access();
@@ -264,7 +286,7 @@ impl ProcessControlBlock {
         drop(task_inner);
         insert_into_pid2process(child.getpid(), Arc::clone(&child));
         // add this thread to scheduler
-        add_task(task);
+        add_process(Arc::clone(&child));
         child
     }
 
