@@ -1,4 +1,5 @@
 mod context;
+mod usertrap;
 
 use crate::config::TRAMPOLINE;
 use crate::syscall::{syscall, syscall6};
@@ -11,12 +12,20 @@ use core::arch::{asm, global_asm};
 use riscv::register::{
     mtvec::TrapMode,
     scause::{self, Exception, Interrupt, Trap},
-    sie, stval, stvec,
+    sie, stval, stvec, sideleg
 };
 
 global_asm!(include_str!("trap.S"));
 
 pub fn init() {
+    // unsafe {
+    //     sie::set_stimer();
+    //     sie::set_sext();
+    //     sie::set_ssoft();
+    //     sideleg::set_usoft();
+    //     sideleg::set_uext();
+    //     sideleg::set_utimer();
+    // }
     set_kernel_trap_entry();
 }
 
@@ -139,3 +148,6 @@ pub fn trap_from_kernel() -> ! {
 }
 
 pub use context::TrapContext;
+pub use usertrap::{
+    push_trap_record, UserTrapError, UserTrapInfo, UserTrapRecord, USER_EXT_INT_MAP,
+};

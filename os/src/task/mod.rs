@@ -22,7 +22,7 @@ pub use id::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
 pub use manager::{add_task, remove_task, pid2process, remove_from_pid2process};
 pub use processor::{
     current_kstack_top, current_process, current_task, current_trap_cx, current_trap_cx_user_va,
-    current_user_token, run_tasks, schedule, take_current_task,
+    current_user_token, run_tasks, schedule, take_current_task, hart_id
 };
 pub use signal::SignalFlags;
 pub use task::{TaskControlBlock, TaskStatus};
@@ -160,4 +160,11 @@ pub fn add_user_test(){
     let inode = open_file("async_pipe_test", OpenFlags::RDONLY);
     let v = inode.unwrap().read_all();
     ProcessControlBlock::new(v.as_slice());
+}
+
+pub fn find_task(pid: usize) -> Option<Arc<TaskControlBlock>> {
+    if let Some(pcb) = pid2process(pid) {
+        return Some(pcb.inner_exclusive_access().get_task(0))
+    }
+    None
 }

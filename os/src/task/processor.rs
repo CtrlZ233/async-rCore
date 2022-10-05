@@ -4,11 +4,20 @@ use super::{ProcessControlBlock, TaskContext, TaskControlBlock};
 use crate::sync::UPSafeCell;
 use crate::trap::TrapContext;
 use alloc::sync::Arc;
+use core::arch::asm;
 use lazy_static::*;
 
 pub struct Processor {
     current: Option<Arc<TaskControlBlock>>,
     idle_task_cx: TaskContext,
+}
+
+pub fn hart_id() -> usize {
+    let hart_id: usize;
+    unsafe {
+        asm!("mv {}, tp", out(reg) hart_id);
+    }
+    hart_id
 }
 
 impl Processor {

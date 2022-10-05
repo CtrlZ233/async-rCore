@@ -7,6 +7,7 @@ DISASM_TMP := target/$(TARGET)/$(MODE)/asm
 FS_IMG := ../user/target/$(TARGET)/$(MODE)/fs.img
 APPS := ../user/src/bin/*
 
+
 # Building mode argument
 ifeq ($(MODE), release)
 	MODE_ARG := --release

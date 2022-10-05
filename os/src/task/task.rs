@@ -1,6 +1,6 @@
 use super::id::TaskUserRes;
 use super::{kstack_alloc, KernelStack, ProcessControlBlock, TaskContext};
-use crate::trap::TrapContext;
+use crate::trap::{TrapContext, UserTrapInfo};
 use crate::{mm::PhysPageNum, sync::UPSafeCell};
 use alloc::sync::{Arc, Weak};
 use core::cell::RefMut;
@@ -30,6 +30,7 @@ pub struct TaskControlBlockInner {
     pub trap_cx_ppn: PhysPageNum,
     pub task_cx: TaskContext,
     pub task_status: TaskStatus,
+    pub user_trap_info: Option<UserTrapInfo>,
     pub exit_code: Option<i32>,
 }
 
@@ -41,6 +42,11 @@ impl TaskControlBlockInner {
     #[allow(unused)]
     fn get_status(&self) -> TaskStatus {
         self.task_status
+    }
+
+
+    pub fn is_user_trap_enabled(&self) -> bool {
+        self.get_trap_cx().sstatus.uie()
     }
 }
 
@@ -63,6 +69,7 @@ impl TaskControlBlock {
                     trap_cx_ppn,
                     task_cx: TaskContext::goto_trap_return(kstack_top),
                     task_status: TaskStatus::Ready,
+                    user_trap_info: None,
                     exit_code: None,
                 })
             },

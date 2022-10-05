@@ -48,6 +48,8 @@ mod trap;
 
 mod logging;
 mod lkm;
+mod plic;
+mod uart;
 
 global_asm!(include_str!("entry.asm"));
 
@@ -66,7 +68,7 @@ fn clear_bss() {
 
 /// the rust entry-point of os
 #[no_mangle]
-pub fn rust_main() -> ! {
+pub fn rust_main(hart_id: usize) -> ! {
     clear_bss();
     logging::init();
     log::info!("[kernel] Hello, world!");
@@ -74,6 +76,11 @@ pub fn rust_main() -> ! {
     mm::remap_test();
     fs::list_apps();
     trap::init();
+    // plic::init();
+    // println!("plic hart init");
+    // plic::init_hart(hart_id);
+    // println!("plic hart init done");
+    // uart::init();
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
 
