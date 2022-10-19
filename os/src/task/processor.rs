@@ -50,7 +50,7 @@ lazy_static! {
 pub fn run_tasks() {
     loop {
         let mut processor = PROCESSORS[hart_id()].exclusive_access();
-
+        // println!("=================================");
         if let Some(task) = fetch_task() {
             let idle_task_cx_ptr = processor.get_idle_task_cx_ptr();
             // access coming task TCB exclusively

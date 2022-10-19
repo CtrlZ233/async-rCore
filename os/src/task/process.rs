@@ -14,6 +14,7 @@ use alloc::vec::Vec;
 use core::cell::RefMut;
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering::{Relaxed, SeqCst};
+use spin::MutexGuard;
 use crate::task::manager::add_process;
 
 pub struct ProcessControlBlock {
@@ -84,7 +85,7 @@ impl ProcessControlBlockInner {
 }
 
 impl ProcessControlBlock {
-    pub fn inner_exclusive_access(&self) -> RefMut<'_, ProcessControlBlockInner> {
+    pub fn inner_exclusive_access(&self) -> MutexGuard<ProcessControlBlockInner> {
         self.inner.exclusive_access()
     }
 

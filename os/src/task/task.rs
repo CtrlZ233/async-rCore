@@ -4,6 +4,7 @@ use crate::trap::TrapContext;
 use crate::{mm::PhysPageNum, sync::UPSafeCell};
 use alloc::sync::{Arc, Weak};
 use core::cell::RefMut;
+use spin::MutexGuard;
 
 pub struct TaskControlBlock {
     // immutable
@@ -14,7 +15,7 @@ pub struct TaskControlBlock {
 }
 
 impl TaskControlBlock {
-    pub fn inner_exclusive_access(&self) -> RefMut<'_, TaskControlBlockInner> {
+    pub fn inner_exclusive_access(&self) -> MutexGuard<TaskControlBlockInner> {
         self.inner.exclusive_access()
     }
 
