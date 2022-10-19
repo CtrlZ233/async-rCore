@@ -152,8 +152,6 @@ impl ProcessControlBlock {
         process_inner.ready_tasks.push(Arc::clone(&task));
         drop(process_inner);
         insert_into_pid2process(process.getpid(), Arc::clone(&process));
-        // add main thread to scheduler
-        add_process(Arc::clone(&process));
         process
     }
 
@@ -287,9 +285,7 @@ impl ProcessControlBlock {
         let trap_cx = task_inner.get_trap_cx();
         trap_cx.kernel_sp = task.kstack.get_top();
         drop(task_inner);
-        insert_into_pid2process(child.getpid(), Arc::clone(&child));
         // add this thread to scheduler
-        add_process(Arc::clone(&child));
         child
     }
 

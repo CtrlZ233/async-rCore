@@ -12,6 +12,7 @@ use self::id::TaskUserRes;
 use crate::fs::{open_file, OpenFlags};
 use alloc::{sync::Arc, vec::Vec};
 use lazy_static::*;
+use spin::Mutex;
 use manager::fetch_task;
 use process::ProcessControlBlock;
 use switch::__switch;
@@ -19,7 +20,7 @@ use crate::timer::remove_timer;
 
 pub use context::TaskContext;
 pub use id::{kstack_alloc, pid_alloc, KernelStack, PidHandle};
-pub use manager::{add_task, pid2process, remove_from_pid2process};
+pub use manager::{add_task, pid2process, remove_from_pid2process, add_process, insert_into_pid2process};
 pub use processor::{
     current_kstack_top, current_process, current_task, current_trap_cx, current_trap_cx_user_va,
     current_user_token, run_tasks, schedule, take_current_task, hart_id
@@ -27,6 +28,10 @@ pub use processor::{
 pub use signal::SignalFlags;
 pub use task::{TaskControlBlock, TaskStatus};
 use crate::task::manager::remove_process;
+
+lazy_static! {
+    pub static ref WAIT_LOCK: Mutex<()> = Mutex::new(());
+}
 
 pub fn suspend_current_and_run_next() {
 
@@ -58,6 +63,9 @@ pub fn block_current_and_run_next() {
 
 pub fn exit_current_and_run_next(exit_code: i32) {
     let task = take_current_task().unwrap();
+
+    let wl = WAIT_LOCK.lock();
+
     let mut task_inner = task.inner_exclusive_access();
     let process = task.process.upgrade().unwrap();
     let tid = task_inner.res.as_ref().unwrap().tid;
@@ -71,7 +79,8 @@ pub fn exit_current_and_run_next(exit_code: i32) {
     // however, if this is the main thread of current process
     // the process should terminate at once
     if tid == 0 {
-        // log::warn!("here");
+        remove_process(Arc::clone(&process));
+
         remove_from_pid2process(process.getpid());
 
         let mut process_inner = process.inner_exclusive_access();
@@ -88,7 +97,6 @@ pub fn exit_current_and_run_next(exit_code: i32) {
                 initproc_inner.children.push(child.clone());
             }
         }
-        remove_process(Arc::clone(&process));
 
         // deallocate user res (including tid/trap_cx/ustack) of all threads
         // it has to be done before we dealloc the whole memory_set
@@ -125,6 +133,7 @@ pub fn exit_current_and_run_next(exit_code: i32) {
         process_inner.ready_tasks.clear();
     }
     drop(process);
+    drop(wl);
     // we do not have to save task context
     let mut _unused = TaskContext::zero_init();
     schedule(&mut _unused as *mut _);
@@ -134,7 +143,9 @@ lazy_static! {
     pub static ref INITPROC: Arc<ProcessControlBlock> = {
         let inode = open_file("initproc", OpenFlags::RDONLY).unwrap();
         let v = inode.read_all();
-        ProcessControlBlock::new(v.as_slice())
+        let process = ProcessControlBlock::new(v.as_slice());
+        add_process(Arc::clone(&process));
+        process
     };
 }
 
@@ -159,5 +170,6 @@ pub fn add_user_test(){
     // log::debug!("add user task");
     let inode = open_file("async_pipe_test", OpenFlags::RDONLY);
     let v = inode.unwrap().read_all();
-    ProcessControlBlock::new(v.as_slice());
+    let process = ProcessControlBlock::new(v.as_slice());
+    add_process(Arc::clone(&process));
 }

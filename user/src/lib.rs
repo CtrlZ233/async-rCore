@@ -25,7 +25,7 @@ use syscall::*;
 
 pub use coroutine::{init_coroutine, add_task_with_priority, add_callback_task, coroutine_run};
 
-const USER_HEAP_SIZE: usize = 3276800;
+const USER_HEAP_SIZE: usize = 32768;
 
 static mut HEAP_SPACE: [u8; USER_HEAP_SIZE] = [0; USER_HEAP_SIZE];
 
@@ -157,6 +157,12 @@ pub fn kill(pid: usize, signal: i32) -> isize {
 
 pub fn sleep(sleep_ms: usize) {
     sys_sleep(sleep_ms);
+}
+
+pub fn sleep_busy(sleep_ms: usize) {
+    let cur = get_time();
+    while get_time() < cur + sleep_ms as isize {}
+
 }
 
 pub fn thread_create(entry: usize, arg: usize) -> isize {

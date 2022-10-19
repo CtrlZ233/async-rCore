@@ -15,21 +15,23 @@ pub fn main() -> i32 {
     let pid = getpid() as usize;
     println!("pid is {}, user test>>>>>>>", pid);
     init_coroutine();
-    let max_len  = 4000;
+    let max_len  = 1;
     let PRIO_NUM = 8;
     // println!("prio: {}", get_prio());
     for i in 0..max_len {
         add_task_with_priority(Box::pin(test_func(i)), (i % PRIO_NUM as isize) as usize);
     }
-    let wake_tid = add_task_with_priority(Box::pin(first()),0);
-    add_task_with_priority(Box::pin(wake_func(wake_tid)),3);
-    // println!("prio: {}", get_prio());
+    let wake_tid = add_task_with_priority(Box::pin(first()),3);
+    add_task_with_priority(Box::pin(wake_func(wake_tid)),0);
+    println!("prio: {}", get_prio());
     if fork() == 0 {
         exec("process\0", &[core::ptr::null::<u8>()]);
-    } else {
+    } else
+    {
         // sleep(1000);
-        thread_create(coroutine_run as usize, 0);
+        // let tid = thread_create(coroutine_run as usize, 0);
         coroutine_run();
+        // waittid(tid as usize);
     }
     //
     // sleep(1000);
@@ -38,6 +40,7 @@ pub fn main() -> i32 {
 }
 
 async fn test_func(i: isize) {
+    sleep_busy(1000);
     println!("hart_id: {}", hart_id());
     println!("test func : {}", i);
 }

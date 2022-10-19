@@ -5,6 +5,7 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::sync::atomic::Ordering::Relaxed;
 use lazy_static::*;
+use spin::Mutex;
 
 pub struct TaskManager {
     process_queue: VecDeque<Arc<ProcessControlBlock>>,
@@ -60,7 +61,7 @@ impl TaskManager {
             .enumerate()
             .find(|(_, t)| Arc::as_ptr(t) == Arc::as_ptr(&process)) {
                 self.process_queue.remove(id);
-            }
+        }
     }
 }
 
@@ -80,6 +81,7 @@ pub fn add_process(process: Arc<ProcessControlBlock>) {
 }
 
 pub fn remove_process(process: Arc<ProcessControlBlock>) {
+    // println!("remove process: {}", process.pid.0);
     TASK_MANAGER.exclusive_access().remove(process);
 }
 

@@ -63,6 +63,7 @@ pub fn coroutine_run() {
                 MANAGER.remove(tid.tid);
             },
             Poll::Pending => {
+                println!("add wait tid: {}", tid.tid);
                 MANAGER.add_wait_task(tid.tid);
             },
         }

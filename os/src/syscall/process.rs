@@ -1,9 +1,6 @@
 use crate::fs::{open_file, OpenFlags};
 use crate::mm::{translated_ref, translated_refmut, translated_str};
-use crate::task::{
-    current_process, current_task, current_user_token, exit_current_and_run_next, pid2process,
-    suspend_current_and_run_next, SignalFlags,
-};
+use crate::task::{current_process, current_task, current_user_token, exit_current_and_run_next, pid2process, suspend_current_and_run_next, SignalFlags, add_process, insert_into_pid2process, WAIT_LOCK};
 use crate::timer::get_time_ms;
 use alloc::string::String;
 use alloc::sync::Arc;
@@ -51,6 +48,10 @@ pub fn sys_fork() -> isize {
     // we do not have to move to next instruction since we have done it before
     // for child process, fork returns 0
     trap_cx.x[10] = 0;
+    drop(new_process_inner);
+
+    add_process(Arc::clone(&new_process));
+    insert_into_pid2process(new_pid, Arc::clone(&new_process));
     new_pid as isize
 }
 
@@ -85,7 +86,7 @@ pub fn sys_exec(path: *const u8, mut args: *const usize) -> isize {
 pub fn sys_waitpid(pid: isize, exit_code_ptr: *mut i32) -> isize {
     let process = current_process();
     // find a child process
-
+    let _ = WAIT_LOCK.lock();
     let mut inner = process.inner_exclusive_access();
     if !inner
         .children
@@ -102,6 +103,7 @@ pub fn sys_waitpid(pid: isize, exit_code_ptr: *mut i32) -> isize {
     });
     if let Some((idx, _)) = pair {
         let child = inner.children.remove(idx);
+        println!("wait pid: {}", child.pid.0);
         // confirm that child will be deallocated after being removed from children list
         assert_eq!(Arc::strong_count(&child), 1);
         let found_pid = child.getpid();

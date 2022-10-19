@@ -67,6 +67,7 @@ impl Scheduler for PrioScheduler {
             for i in 0..PRIO_NUM {
                 if !self.queue[PRIO_NUM - i - 1].is_empty() {
                     self.high_prio = PRIO_NUM - i - 1;
+                    break;
                 }
             }
             println!("prio changed");
